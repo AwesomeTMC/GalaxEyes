@@ -2,10 +2,80 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:optimizers="using:GalaxEyes.Optimizers"
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="GalaxEyes.MainWindow"
 		xmlns:local="clr-namespace:GalaxEyes"
+		x:DataType="local:MainWindow"
 		Title="GalaxEyes">
+
+	<Window.DataTemplates>
+
+		<DataTemplate DataType="local:WaitingState"
+					  x:DataType="local:WaitingState">
+			<TextBlock FontSize="24"
+					   HorizontalAlignment="Center"
+					   VerticalAlignment="Center"
+					   Text="Waiting for scan..." />
+		</DataTemplate>
+
+		<DataTemplate DataType="local:ScanningState"
+					  x:DataType="local:ScanningState">
+			<StackPanel HorizontalAlignment="Center"
+						VerticalAlignment="Center"
+						Spacing="10">
+				<ProgressBar IsIndeterminate="True" Width="200"/>
+				<TextBlock Text="Scanning..." />
+			</StackPanel>
+		</DataTemplate>
+
+		<DataTemplate DataType="local:ResultsState"
+					  x:DataType="local:ResultsState">
+
+			<ItemsControl ItemsSource="{Binding TestList}" Padding="10">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate x:DataType="local:OptimizerRow">
+						<Grid Margin="4">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+
+							<StackPanel Grid.Column="0" Margin="8,0">
+								<TextBlock
+								VerticalAlignment="Center"
+								Text="{Binding Label}"/>
+								<TextBlock Text="{Binding FilePath}" Foreground="Gray" />
+							</StackPanel>
+
+							<ComboBox x:Name="fontComboBox" SelectedIndex="0" Margin="8,0"
+									  MaxDropDownHeight="300"
+									  ItemsSource="{Binding Actions}"
+									  SelectedValue="{Binding SelectedAction}" Grid.Column="1">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding}" FontFamily="{Binding}" />
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+						</Grid>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+
+		</DataTemplate>
+
+		<DataTemplate DataType="local:NoneFoundState"
+					  x:DataType="local:NoneFoundState">
+			<TextBlock FontSize="24"
+					   HorizontalAlignment="Center"
+					   VerticalAlignment="Center"
+					   Text="No issues found! :D" />
+		</DataTemplate>
+
+
+	</Window.DataTemplates>
+
 	<TabControl Margin="5">
 		<TabItem Header="Scan">
 			<Grid>
@@ -29,9 +99,9 @@
 
 						<!-- Optimizers -->
 						<ScrollViewer Grid.Row="1" >
-							<ItemsControl x:Name="OptimizerList" Padding="10">
+							<ItemsControl x:Name="OptimizerRowList" Padding="10">
 								<ItemsControl.ItemTemplate>
-									<DataTemplate x:DataType="local:OptimizerRow">
+									<DataTemplate x:DataType="optimizers:Optimizer">
 										<Grid Margin="4">
 											<Grid.ColumnDefinitions>
 												<ColumnDefinition Width="Auto"/>
@@ -39,13 +109,13 @@
 												<ColumnDefinition Width="Auto"/>
 											</Grid.ColumnDefinitions>
 
-											<CheckBox Grid.Column="0"
+											<CheckBox Grid.Column="0" IsChecked="{Binding IsActive}"
 													  VerticalAlignment="Center"/>
 
 											<TextBlock Grid.Column="1"
 													   Margin="8,0"
 													   VerticalAlignment="Center"
-													   Text="{Binding Label}"/>
+													   Text="{Binding OptimizerName}"/>
 
 											<Button Grid.Column="2"
 													Content="Settings"
@@ -63,7 +133,8 @@
 								FontSize="24"
 								Content="Start Scan"
 								HorizontalAlignment="Center"
-								Margin="0,10,0,0"/>
+								Margin="0,10,0,0"
+								Click="ClickHandler"/>
 					</Grid>
 				</Panel>
 
@@ -81,9 +152,9 @@
 						</Style>
 					</GridSplitter.Styles>
 				</GridSplitter>
-				<Panel Grid.Column="2">
-					<TextBlock FontSize="24" VerticalAlignment="Center" HorizontalAlignment="Center">Waiting for scan...</TextBlock>
-				</Panel>
+				<ContentControl Grid.Column="2"
+								Content="{Binding RightPaneContent,
+								RelativeSource={RelativeSource AncestorType=local:MainWindow}}"/>
 
 			</Grid>
 		</TabItem>
@@ -96,10 +167,10 @@
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Button Grid.Column="0"
-								Content="Open Folder" Margin="0 0 10 0 "/>
-					<TextBox Grid.Column="1" Watermark="The path to your mod"/>
+							Content="Open Folder" Margin="0 0 10 0 "/>
+					<TextBox Grid.Column="1" Watermark="The path to your mod" x:Name="ModPath"/>
 				</Grid>
-				
+
 				<TextBlock Text="Theme"/>
 				<ComboBox SelectedIndex="0" MaxDropDownHeight="100">
 					<ComboBoxItem>System</ComboBoxItem>
