@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GalaxEyes.Optimizers
 {
-    public static class OptimizerList
+    public static class AllOptimizers
     {
         public static List<Optimizer> Items = new()
         {
