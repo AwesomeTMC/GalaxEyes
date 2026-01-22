@@ -25,7 +25,8 @@ namespace GalaxEyes.Optimizers
     public class OptimizerAction(Action callback, String callbackName)
     {
         public Action Callback = callback;
-        public string CallbackName = callbackName;
+        public String CallbackName = callbackName;
+        public override String ToString() => this.CallbackName;
     }
 
     public class Result(ResultType type, string message, string affectedFile, List<OptimizerAction>? callbacks = null)

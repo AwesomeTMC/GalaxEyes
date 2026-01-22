@@ -19,17 +19,18 @@ namespace GalaxEyes;
 public class OptimizerResultRow
 {
     public string Label { get; set; } = "";
-    public bool IsChecked { get; set; }
     public string FilePath { get; set; } = "";
-    public List<string> Actions { get; set; } = new();
-    public string SelectedAction { get; set; } = "";
+    public List<OptimizerAction> Actions { get; set; } = new();
+    public OptimizerAction? SelectedAction { get; set; }
 }
 
 public abstract class RightPaneState { }
 
 public sealed class WaitingState : RightPaneState { }
 
-public sealed class ScanningState : RightPaneState { }
+public sealed class LoadingState(String label) : RightPaneState { 
+    public string Label { get; set; } = label;
+}
 
 public sealed class ResultsState : RightPaneState
 {
@@ -43,6 +44,8 @@ public sealed class SelectDirectoryState : RightPaneState
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
 }
+
+public sealed class DoneState : RightPaneState { }
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
@@ -71,13 +74,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
     }
 
-    private async void ClickHandler(object? sender, RoutedEventArgs args)
+    private async void ScanButtonEvent(object? sender, RoutedEventArgs args)
     {
         if (!CheckDirectoryState())
             return;
 
         Debug.WriteLine("Starting scan...");
-        RightPaneContent = new ScanningState();
+        RightPaneContent = new LoadingState("Scanning...");
 
         await StartScan();
     }
@@ -163,19 +166,62 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             else
                 filePath = "<Your Mod>" + filePath;
             filePath = filePath.Replace("\\", "/");
-
-            List<string> actions = new();
-            foreach (OptimizerAction action in result.Callbacks)
-            {
-                actions.Add(action.CallbackName);
-            }
-            resultsState.ResultList.Add(new OptimizerResultRow { Label = result.Message, FilePath = filePath, Actions = actions });
+            resultsState.ResultList.Add(new OptimizerResultRow { Label = result.Message, FilePath = filePath, Actions = result.Callbacks, SelectedAction = result.Callbacks.Count > 0 ? result.Callbacks[0] : null });
         }
 
         if (resultsState.ResultList.Count > 0)
             RightPaneContent = resultsState;
         else
             RightPaneContent = new NoneFoundState();
+    }
+
+    private async void ResolveButtonEvent(object? sender, RoutedEventArgs args)
+    {
+        await StartResolve();
+    }
+
+    private async Task StartResolve()
+    {
+        ResultsState? resultsState = RightPaneContent as ResultsState;
+        if (resultsState == null)
+            return;
+        RightPaneContent = new LoadingState("Resolving...");
+
+        List<Result> newResults = await Task.Run(() =>
+        {
+            List<Result> tempResults = new();
+            foreach (var result in resultsState.ResultList)
+            {
+                if (result == null || result.SelectedAction == null)
+                    continue;
+
+                try
+                {
+                    result.SelectedAction.Callback();
+                }
+                catch (Exception e)
+                {
+                    List<OptimizerAction> errorActions = new()
+                    {
+                        new OptimizerAction(() => { }, "Ignore"),
+                        new OptimizerAction(result.SelectedAction.Callback, "Retry"),
+                    };
+                    tempResults.Add(new Result(ResultType.Error, e.ToString(), result.FilePath, errorActions));
+                }
+            }
+            return tempResults;
+        });
+
+        resultsState.ResultList.Clear();
+        foreach (Result result in newResults)
+        {
+            resultsState.ResultList.Add(new OptimizerResultRow { Label = result.Message, FilePath = result.AffectedFile, Actions = result.Callbacks, SelectedAction = result.Callbacks.Count > 0 ? result.Callbacks[0] : null });
+        }
+
+        if (resultsState.ResultList.Count > 0)
+            RightPaneContent = resultsState;
+        else
+            RightPaneContent = new DoneState();
     }
 
     // Only meant for use by ModDirectory's 'set' method.

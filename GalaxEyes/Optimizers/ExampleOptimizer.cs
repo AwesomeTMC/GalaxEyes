@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GalaxEyes.Optimizers
@@ -44,7 +46,7 @@ namespace GalaxEyes.Optimizers
         public void OptimizeFile(String filePath)
         {
             String newPath = filePath.Replace("Unoptimized", "Optimized");
-            if (!File.Exists(newPath))
+            if (!File.Exists(newPath) && File.Exists(filePath))
                 File.Move(filePath, newPath);
         }
     }
