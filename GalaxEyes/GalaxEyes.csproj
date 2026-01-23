@@ -5,7 +5,11 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>GalaxEyes.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="GalaxEyes.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.9" />
