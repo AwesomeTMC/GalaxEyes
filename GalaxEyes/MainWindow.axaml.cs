@@ -16,19 +16,22 @@ using Tmds.DBus.Protocol;
 
 namespace GalaxEyes;
 
-public class OptimizerResultRow
+public class OptimizerResultRow(string label, string filePath, string modDirectory, List<OptimizerAction> actions, OptimizerAction? selectedAction)
 {
-    public string Label { get; set; } = "";
-    public string FilePath { get; set; } = "";
-    public List<OptimizerAction> Actions { get; set; } = new();
-    public OptimizerAction? SelectedAction { get; set; }
+    public string Label { get; set; } = label;
+    public string FilePath { get; set; } = filePath;
+
+    public string VisiblePath { get; } = Path.GetRelativePath(modDirectory, filePath);
+    public List<OptimizerAction> Actions { get; set; } = actions;
+    public OptimizerAction? SelectedAction { get; set; } = selectedAction;
 }
 
 public abstract class RightPaneState { }
 
 public sealed class WaitingState : RightPaneState { }
 
-public sealed class LoadingState(String label) : RightPaneState { 
+public sealed class LoadingState(String label) : RightPaneState
+{
     public string Label { get; set; } = label;
 }
 
@@ -82,6 +85,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         Debug.WriteLine("Starting scan...");
         RightPaneContent = new LoadingState("Scanning...");
 
+        await Task.Yield();
         await StartScan();
     }
 
@@ -130,49 +134,60 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var optimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
         string targetDirectory = ModDirectory;
 
-        List<Result> results = await Task.Run(() =>
+        RightPaneContent = new LoadingState("Scanning...");
+
+        var finalState = await Task.Run(() =>
         {
             List<Result> tempResults = new();
 
-            if (!Directory.Exists(targetDirectory)) return tempResults;
-
-            foreach (String file in Directory.GetFiles(targetDirectory, "*.*", SearchOption.AllDirectories))
+            if (Directory.Exists(targetDirectory))
             {
-                foreach (Optimizer? optimizer in optimizers)
+                var files = Directory.EnumerateFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
+                foreach (String file in files)
                 {
-                    if (optimizer != null && optimizer.IsActive)
-                    {
-                        try
-                        {
-                            tempResults.AddRange(optimizer.Check(file));
-                        }
-                        catch (Exception e)
-                        {
-                            tempResults.Add(new Result(ResultType.Error, e.ToString(), file));
-                        }
-                    }
+                    tempResults.AddRange(ScanFile(file, optimizers));
                 }
             }
-            return tempResults;
+
+            var state = new ResultsState();
+
+            foreach (Result result in tempResults)
+            {
+                state.ResultList.Add(new OptimizerResultRow(
+                    result.Message,
+                    result.AffectedFile,
+                    targetDirectory,
+                    result.Callbacks,
+                    result.Callbacks.FirstOrDefault()
+                ));
+            }
+
+            return state;
         });
 
-        var resultsState = new ResultsState();
+        RightPaneContent = finalState.ResultList.Any()
+            ? finalState
+            : new NoneFoundState();
+    }
 
-        foreach (Result result in results)
+    private List<Result> ScanFile(string file, List<Optimizer> optimizers)
+    {
+        List<Result> tempResults = new();
+        foreach (Optimizer? optimizer in optimizers)
         {
-            String filePath = result.AffectedFile.Replace(targetDirectory, "");
-            if (targetDirectory.EndsWith("\\") || targetDirectory.EndsWith("/"))
-                filePath = "<Your Mod>/" + filePath;
-            else
-                filePath = "<Your Mod>" + filePath;
-            filePath = filePath.Replace("\\", "/");
-            resultsState.ResultList.Add(new OptimizerResultRow { Label = result.Message, FilePath = filePath, Actions = result.Callbacks, SelectedAction = result.Callbacks.Count > 0 ? result.Callbacks[0] : null });
+            if (optimizer != null && optimizer.IsActive)
+            {
+                try
+                {
+                    tempResults.AddRange(optimizer.Check(file));
+                }
+                catch (Exception e)
+                {
+                    tempResults.Add(new Result(ResultType.Error, e.ToString(), file));
+                }
+            }
         }
-
-        if (resultsState.ResultList.Count > 0)
-            RightPaneContent = resultsState;
-        else
-            RightPaneContent = new NoneFoundState();
+        return tempResults;
     }
 
     private async void ResolveButtonEvent(object? sender, RoutedEventArgs args)
@@ -197,16 +212,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
                 try
                 {
-                    result.SelectedAction.Callback();
+                    tempResults.AddRange(result.SelectedAction.Callback());
                 }
                 catch (Exception e)
                 {
-                    List<OptimizerAction> errorActions = new()
-                    {
-                        new OptimizerAction(() => { }, "Ignore"),
-                        new OptimizerAction(result.SelectedAction.Callback, "Retry"),
-                    };
-                    tempResults.Add(new Result(ResultType.Error, e.ToString(), result.FilePath, errorActions));
+                    Util.AddError(ref tempResults, e.ToString(), result.FilePath, result.SelectedAction.Callback);
                 }
             }
             return tempResults;
@@ -215,7 +225,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         resultsState.ResultList.Clear();
         foreach (Result result in newResults)
         {
-            resultsState.ResultList.Add(new OptimizerResultRow { Label = result.Message, FilePath = result.AffectedFile, Actions = result.Callbacks, SelectedAction = result.Callbacks.Count > 0 ? result.Callbacks[0] : null });
+            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
         }
 
         if (resultsState.ResultList.Count > 0)

@@ -37,34 +37,35 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
-				<ItemsControl ItemsSource="{Binding ResultList}" Padding="10" Grid.Column="0">
-					<ItemsControl.ItemTemplate>
-						<DataTemplate x:DataType="local:OptimizerResultRow">
-							<Grid Margin="4">
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="*"/>
-									<ColumnDefinition Width="Auto"/>
-								</Grid.ColumnDefinitions>
+				<ScrollViewer Grid.Column="0">
+					<ItemsRepeater ItemsSource="{Binding ResultList}">
+						<ItemsRepeater.ItemTemplate>
+							<DataTemplate x:DataType="local:OptimizerResultRow">
+								<Grid Margin="4">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
 
-								<StackPanel Grid.Column="0" Margin="8,0">
-									<TextBlock
-									VerticalAlignment="Center"
-									Text="{Binding Label}" TextWrapping="Wrap"/>
-									<TextBlock Text="{Binding FilePath}" Foreground="Gray" />
-								</StackPanel>
+									<StackPanel Grid.Column="0" Margin="8,0">
+										<TextBlock VerticalAlignment="Center"
+												   Text="{Binding Label}" TextWrapping="Wrap"/>
+										<TextBlock Text="{Binding VisiblePath}" Foreground="Gray" />
+									</StackPanel>
 
-								<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0"
-										  MaxDropDownHeight="300"
-										  ItemsSource="{Binding Actions}"
-										  SelectedItem="{Binding SelectedAction}" Grid.Column="1">
-								</ComboBox>
-							</Grid>
-						</DataTemplate>
-					</ItemsControl.ItemTemplate>
-				</ItemsControl>
+									<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0"
+											  MaxDropDownHeight="300"
+											  ItemsSource="{Binding Actions}"
+											  SelectedItem="{Binding SelectedAction}" Grid.Column="1">
+									</ComboBox>
+								</Grid>
+							</DataTemplate>
+						</ItemsRepeater.ItemTemplate>
+					</ItemsRepeater>
+				</ScrollViewer>
 				<Button Grid.Row="1"
 						FontSize="24"
-						Content="Resolve"
+						Content="Resolve All"
 						HorizontalAlignment="Center"
 						Margin="0,10,0,0"
 						x:Name="StartResolveButton"

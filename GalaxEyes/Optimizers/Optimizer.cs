@@ -22,9 +22,9 @@ namespace GalaxEyes.Optimizers
         Error
     }
 
-    public class OptimizerAction(Action callback, String callbackName)
+    public class OptimizerAction(Func<List<Result>> callback, String callbackName)
     {
-        public Action Callback = callback;
+        public Func<List<Result>> Callback = callback;
         public String CallbackName = callbackName;
         public override String ToString() => this.CallbackName;
     }
