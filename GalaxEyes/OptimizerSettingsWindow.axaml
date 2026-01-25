@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:local="using:GalaxEyes"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		x:Class="GalaxEyes.OptimizerSettingsWindow"
+		x:DataType="local:OptimizerSettingsWindow"
+		Title="{Binding AssociatedOptimizer.OptimizerName}">
+	<Window.Resources>
+		<local:SettingTemplateSelector x:Key="MySettingsSelector">
+			<DataTemplate x:Key="Boolean" x:DataType="local:LiveSettingEntry">
+				<CheckBox IsChecked="{Binding Value, Mode=TwoWay}" VerticalAlignment="Center" />
+			</DataTemplate>
+
+			<DataTemplate x:Key="String" x:DataType="local:LiveSettingEntry">
+				<TextBox Text="{Binding Value, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+			</DataTemplate>
+
+			<DataTemplate x:Key="Int32" x:DataType="local:LiveSettingEntry">
+				<NumericUpDown Value="{Binding Value, Mode=TwoWay}" />
+			</DataTemplate>
+		</local:SettingTemplateSelector>
+	</Window.Resources>
+
+	<ScrollViewer>
+		<ItemsRepeater
+		ItemTemplate="{StaticResource MySettingsSelector}" x:Name="AllSettings">
+			<ItemsRepeater.Layout>
+				<StackLayout Spacing="10" />
+			</ItemsRepeater.Layout>
+
+			<ItemsRepeater.ItemTemplate>
+				<DataTemplate>
+					<DockPanel Margin="5" x:DataType="local:LiveSettingEntry">
+						<TextBlock Text="{Binding Name}" Width="150" VerticalAlignment="Center"/>
+						<ContentControl Content="{Binding}"
+										ContentTemplate="{StaticResource MySettingsSelector}"/>
+					</DockPanel>
+				</DataTemplate>
+			</ItemsRepeater.ItemTemplate>
+		</ItemsRepeater>
+	</ScrollViewer>
+</Window>

@@ -43,5 +43,6 @@ namespace GalaxEyes.Optimizers
         public Optimizer(String name) { OptimizerName = name; }
 
         public abstract List<Result> Check(String file);
+        public abstract IHaveSettings? Settings { get; }
     }
 }

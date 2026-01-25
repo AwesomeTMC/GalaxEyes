@@ -1,19 +1,29 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GalaxEyes.Optimizers
 {
+    public partial class MainSettings : FileSettings<MainSettings>
+    {
+        [JsonIgnore] public override string FileName => "example_settings.json";
+
+        [ObservableProperty] private bool _causeError = false;
+        [ObservableProperty] private int _sleepAmount = 0;
+    }
     public class ExampleOptimizer : Optimizer
     {
         public ExampleOptimizer() : base("Example Optimizer")
         {
         }
+        public override MainSettings Settings { get; } = new MainSettings();
 
         public override List<Result> Check(String filePath)
         {
@@ -23,9 +33,9 @@ namespace GalaxEyes.Optimizers
 
             String fileName = Path.GetFileName(filePath);
 
-            // TODO: put these behind optimizer settings
-            //Util.AddError(ref resultList, "Some error occured", filePath, () => { return Check(filePath); });
-            //Thread.Sleep(1);
+            if (Settings.CauseError)
+                Util.AddError(ref resultList, "Some error occured", filePath, () => { return Check(filePath); });
+            Thread.Sleep(Settings.SleepAmount);
 
             if (fileName.Contains("Unoptimized"))
             {

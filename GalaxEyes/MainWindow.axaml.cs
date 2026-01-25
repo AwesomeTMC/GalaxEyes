@@ -52,9 +52,10 @@ public sealed class DoneState : RightPaneState { }
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
+    public MainSettings mainSettings { get; } = MainSettings.Load();
+
     public MainWindow()
     {
-        CurrentTheme = AppSettings.Default.CurrentTheme;
 
         InitializeComponent();
         DataContext = this;
@@ -63,7 +64,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             if (optimizer != null)
                 OptimizerList.Items.Add(optimizer);
         }
-        ModDirectory = AppSettings.Default.ModDirectory;
+        mainSettings.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(mainSettings.ModDirectory))
+            {
+                if (CheckDirectoryState())
+                    RightPaneContent = new WaitingState();
+            }
+        };
+
+        if (CheckDirectoryState())
+            RightPaneContent = new WaitingState();
     }
 
     public string[] Themes { get; } =
@@ -91,10 +102,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private bool CheckDirectoryState()
     {
-        var stagePath = Path.Combine(ModDirectory, "StageData");
-        var objectPath = Path.Combine(ModDirectory, "ObjectData");
+        var stagePath = Path.Combine(mainSettings.ModDirectory, "StageData");
+        var objectPath = Path.Combine(mainSettings.ModDirectory, "ObjectData");
         bool isValidState = false;
-        if (ModDirectory == "")
+        if (mainSettings.ModDirectory == "")
         {
             RightPaneContent = new SelectDirectoryState
             {
@@ -103,7 +114,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 "It needs to have the folders \"StageData\" and \"ObjectData\" inside."
             };
         }
-        else if (!Path.Exists(ModDirectory))
+        else if (!Path.Exists(mainSettings.ModDirectory))
         {
             RightPaneContent = new SelectDirectoryState
             {
@@ -132,7 +143,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async Task StartScan()
     {
         var optimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
-        string targetDirectory = ModDirectory;
+        string targetDirectory = mainSettings.ModDirectory;
 
         RightPaneContent = new LoadingState("Scanning...");
 
@@ -225,7 +236,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         resultsState.ResultList.Clear();
         foreach (Result result in newResults)
         {
-            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
+            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, mainSettings.ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
         }
 
         if (resultsState.ResultList.Count > 0)
@@ -234,7 +245,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             RightPaneContent = new DoneState();
     }
 
-    // Only meant for use by ModDirectory's 'set' method.
     private void UpdateTheme(String? theme)
     {
         switch (theme)
@@ -257,48 +267,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var options = new Avalonia.Platform.Storage.FolderPickerOpenOptions();
         options.Title = "Select your mod directory. It usually contains 'StageData'.";
         options.AllowMultiple = false;
-        options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(AppSettings.Default.ModDirectory);
+        options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(mainSettings.ModDirectory);
         var result = await this.StorageProvider.OpenFolderPickerAsync(options);
 
         if (result != null && result.Count > 0)
         {
             var storageFolder = result[0];
-            ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
+            mainSettings.ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
         }
     }
 
-    private string _currentTheme;
-    public string CurrentTheme
+    private async void OptimizerSettingsEvent(object? sender, RoutedEventArgs args)
     {
-        get => _currentTheme;
-        set
-        {
-            _currentTheme = value;
-            SettingChanged(nameof(CurrentTheme), value);
-            UpdateTheme(value);
-        }
-    }
+        var button = (Button?)sender;
+        var optimizer = (Optimizer?)button?.DataContext!;
+        if (optimizer == null)
+            return;
 
-    private string _modDirectory;
-    public string ModDirectory
-    {
-        get => _modDirectory;
-        set
-        {
-            if (_modDirectory == value)
-                return;
-            _modDirectory = value;
-            SettingChanged(nameof(ModDirectory), value);
-            if (CheckDirectoryState())
-                RightPaneContent = new WaitingState();
-        }
-    }
+        var x = new OptimizerSettingsWindow(optimizer);
+        await x.ShowDialog(this);
 
-    private void SettingChanged(string name, object val)
-    {
-        PropertyChanged?.Invoke(this, new(name));
-        AppSettings.Default[name] = val;
-        AppSettings.Default.Save();
     }
 
     private RightPaneState? _rightPaneContent;
@@ -313,4 +301,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void ThemeChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        UpdateTheme(mainSettings.CurrentTheme);
+    }
 }
