@@ -12,6 +12,7 @@ namespace GalaxEyes.Optimizers
         public static List<Optimizer> Items = new()
         {
             new ExampleOptimizer(),
+            new VanillaFileOptimizer()
         };
     }
 
@@ -44,5 +45,9 @@ namespace GalaxEyes.Optimizers
 
         public abstract List<Result> Check(String file);
         public abstract IHaveSettings? Settings { get; }
+        public virtual List<Result> RunAfter()
+        {
+            return new();
+        }
     }
 }

@@ -102,7 +102,7 @@
 							Margin="0 0 10 0"/>
 
 					<TextBox Grid.Column="1"
-							 Watermark="The path to your mod" Text="{Binding #Root.DataContext.mainSettings.ModDirectory}"/>
+							 Watermark="The path to your mod" Text="{Binding #Root.DataContext.Settings.ModDirectory}"/>
 				</Grid>
 			</StackPanel>
 		</DataTemplate>
@@ -219,14 +219,14 @@
 								Margin="0 0 10 0"/>
 
 						<TextBox Grid.Column="1"
-								 Watermark="The path to your mod" Text="{Binding mainSettings.ModDirectory}"/>
+								 Watermark="The path to your mod" Text="{Binding Settings.Instance.ModDirectory}"/>
 					</Grid>
 
 					<TextBlock Text="Theme"/>
 
 					<ComboBox
 					ItemsSource="{Binding Themes}"
-					SelectedItem="{Binding mainSettings.CurrentTheme}" SelectionChanged="ThemeChanged"/>
+					SelectedItem="{Binding Settings.Instance.CurrentTheme}" SelectionChanged="ThemeChanged"/>
 				</StackPanel>
 
 			</ContentControl>

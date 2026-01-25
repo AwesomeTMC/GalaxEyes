@@ -52,7 +52,7 @@ public sealed class DoneState : RightPaneState { }
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    public MainSettings mainSettings { get; } = MainSettings.Load();
+    
 
     public MainWindow()
     {
@@ -64,9 +64,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             if (optimizer != null)
                 OptimizerList.Items.Add(optimizer);
         }
-        mainSettings.PropertyChanged += (s, e) =>
+        MainSettings.Instance.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(mainSettings.ModDirectory))
+            if (e.PropertyName == nameof(MainSettings.Instance.ModDirectory))
             {
                 if (CheckDirectoryState())
                     RightPaneContent = new WaitingState();
@@ -76,6 +76,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (CheckDirectoryState())
             RightPaneContent = new WaitingState();
     }
+    public MainSettings Settings => MainSettings.Instance;
 
     public string[] Themes { get; } =
     {
@@ -102,10 +103,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private bool CheckDirectoryState()
     {
-        var stagePath = Path.Combine(mainSettings.ModDirectory, "StageData");
-        var objectPath = Path.Combine(mainSettings.ModDirectory, "ObjectData");
+        var stagePath = Path.Combine(MainSettings.Instance.ModDirectory, "StageData");
+        var objectPath = Path.Combine(MainSettings.Instance.ModDirectory, "ObjectData");
         bool isValidState = false;
-        if (mainSettings.ModDirectory == "")
+        if (MainSettings.Instance.ModDirectory == "")
         {
             RightPaneContent = new SelectDirectoryState
             {
@@ -114,7 +115,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 "It needs to have the folders \"StageData\" and \"ObjectData\" inside."
             };
         }
-        else if (!Path.Exists(mainSettings.ModDirectory))
+        else if (!Path.Exists(MainSettings.Instance.ModDirectory))
         {
             RightPaneContent = new SelectDirectoryState
             {
@@ -143,7 +144,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async Task StartScan()
     {
         var optimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
-        string targetDirectory = mainSettings.ModDirectory;
+        string targetDirectory = MainSettings.Instance.ModDirectory;
 
         RightPaneContent = new LoadingState("Scanning...");
 
@@ -230,13 +231,33 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     Util.AddError(ref tempResults, e.ToString(), result.FilePath, result.SelectedAction.Callback);
                 }
             }
+            
             return tempResults;
         });
+
+        newResults.AddRange(await Task.Run(() =>
+        {
+            List<Result> tempResults = new();
+            foreach (var optimizer in AllOptimizers.Items)
+            {
+                try
+                {
+                    tempResults.AddRange(optimizer.RunAfter());
+                }
+                catch (Exception e)
+                {
+                    Util.AddError(ref tempResults, e.ToString(), optimizer.OptimizerName, () => { return optimizer.RunAfter(); });
+                }
+            }
+            return tempResults;
+        }));
+
+
 
         resultsState.ResultList.Clear();
         foreach (Result result in newResults)
         {
-            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, mainSettings.ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
+            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, MainSettings.Instance.ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
         }
 
         if (resultsState.ResultList.Count > 0)
@@ -267,13 +288,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var options = new Avalonia.Platform.Storage.FolderPickerOpenOptions();
         options.Title = "Select your mod directory. It usually contains 'StageData'.";
         options.AllowMultiple = false;
-        options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(mainSettings.ModDirectory);
+        options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(MainSettings.Instance.ModDirectory);
         var result = await this.StorageProvider.OpenFolderPickerAsync(options);
 
         if (result != null && result.Count > 0)
         {
             var storageFolder = result[0];
-            mainSettings.ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
+            MainSettings.Instance.ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
         }
     }
 
@@ -304,6 +325,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void ThemeChanged(object? sender, SelectionChangedEventArgs e)
     {
-        UpdateTheme(mainSettings.CurrentTheme);
+        UpdateTheme(MainSettings.Instance.CurrentTheme);
     }
 }

@@ -13,6 +13,8 @@ namespace GalaxEyes;
 
 public partial class MainSettings : FileSettings<MainSettings>
 {
+    private static MainSettings? _instance;
+    public static MainSettings Instance => _instance ??= Load();
     [JsonIgnore] public override string FileName => "main_settings.json";
 
     [ObservableProperty] private string _currentTheme = "System";

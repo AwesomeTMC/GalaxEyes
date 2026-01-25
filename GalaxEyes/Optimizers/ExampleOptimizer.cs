@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace GalaxEyes.Optimizers
 {
-    public partial class MainSettings : FileSettings<MainSettings>
+    public partial class ExampleSettings : FileSettings<ExampleSettings>
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
@@ -23,7 +23,7 @@ namespace GalaxEyes.Optimizers
         public ExampleOptimizer() : base("Example Optimizer")
         {
         }
-        public override MainSettings Settings { get; } = new MainSettings();
+        public override ExampleSettings Settings { get; } = ExampleSettings.Load();
 
         public override List<Result> Check(String filePath)
         {
@@ -50,7 +50,6 @@ namespace GalaxEyes.Optimizers
             return resultList;
         }
 
-        
         public List<Result> OptimizeFile(String filePath)
         {
             String newPath = filePath.Replace("Unoptimized", "Optimized");
