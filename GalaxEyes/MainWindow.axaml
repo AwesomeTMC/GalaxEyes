@@ -9,9 +9,48 @@
 		x:DataType="local:MainWindow"
 		x:Name="Root"
 		Title="GalaxEyes">
+	<Window.Resources>
+		<DataTemplate DataType="local:OptimizerResultGroup" x:DataType="local:OptimizerResultGroup" x:Key="OptimizerResultGroup">
+			<Grid Margin="4" ColumnDefinitions="*">
+				<Expander Grid.Column="0" HorizontalAlignment="Stretch" Margin="0, 0, 16, 0">
+					<Expander.Header>
+						<Grid Margin="4" ColumnDefinitions="*, Auto">
+							<StackPanel Grid.Column="0" Margin="8,0,0,0">
+								<TextBlock VerticalAlignment="Center"
+										   Text="{Binding GroupMessage}" TextWrapping="Wrap"/>
+								<TextBlock Text="{Binding GrayMessage}" Foreground="Gray" TextWrapping="Wrap"/>
+							</StackPanel>
+							<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0,0,0"
+									  MaxDropDownHeight="300"
+									  ItemsSource="{Binding Actions}"
+									  SelectedItem="{Binding SelectedAction}" Grid.Column="1">
+							</ComboBox>
+						</Grid>
+					</Expander.Header>
+					<ItemsRepeater ItemsSource="{Binding OptimizerResults}"
+								   ItemTemplate="{StaticResource OptimizerResultRow}"/>
+				</Expander>
+			</Grid>
+		</DataTemplate>
 
+		<DataTemplate DataType="local:OptimizerResultRow" x:DataType="local:OptimizerResultRow" x:Key="OptimizerResultRow">
+			<Grid Margin="4" ColumnDefinitions="*, Auto">
+				<StackPanel Grid.Column="0" Margin="8,0">
+					<TextBlock x:Name="LabelTextBlock" VerticalAlignment="Center"
+							   Text="{Binding MainMessage}" TextWrapping="Wrap"/>
+					<TextBlock Text="{Binding GrayMessage}" Foreground="Gray" TextWrapping="Wrap"/>
+				</StackPanel>
+
+				<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0"
+						  MaxDropDownHeight="300"
+						  ItemsSource="{Binding Actions}"
+						  SelectedItem="{Binding SelectedAction}" Grid.Column="1">
+				</ComboBox>
+			</Grid>
+		</DataTemplate>
+	</Window.Resources>
 	<Window.DataTemplates>
-
+		<!-- States -->
 		<DataTemplate DataType="local:WaitingState"
 					  x:DataType="local:WaitingState">
 			<TextBlock FontSize="24"
@@ -37,31 +76,9 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
-				<ScrollViewer Grid.Column="0">
-					<ItemsRepeater ItemsSource="{Binding ResultList}">
-						<ItemsRepeater.ItemTemplate>
-							<DataTemplate x:DataType="local:OptimizerResultRow">
-								<Grid Margin="4">
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="Auto"/>
-									</Grid.ColumnDefinitions>
-
-									<StackPanel Grid.Column="0" Margin="8,0">
-										<TextBlock VerticalAlignment="Center"
-												   Text="{Binding Label}" TextWrapping="Wrap"/>
-										<TextBlock Text="{Binding VisiblePath}" Foreground="Gray" />
-									</StackPanel>
-
-									<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0"
-											  MaxDropDownHeight="300"
-											  ItemsSource="{Binding Actions}"
-											  SelectedItem="{Binding SelectedAction}" Grid.Column="1">
-									</ComboBox>
-								</Grid>
-							</DataTemplate>
-						</ItemsRepeater.ItemTemplate>
-					</ItemsRepeater>
+				<ScrollViewer Grid.Row="0">
+					<ItemsRepeater ItemsSource="{Binding ResultList}"
+								   ItemTemplate="{StaticResource OptimizerResultGroup}"/>
 				</ScrollViewer>
 				<Button Grid.Row="1"
 						FontSize="24"
@@ -114,8 +131,6 @@
 					   VerticalAlignment="Center"
 					   Text="Resolved all issues successfully!" />
 		</DataTemplate>
-
-
 	</Window.DataTemplates>
 
 	<TabControl Margin="5">

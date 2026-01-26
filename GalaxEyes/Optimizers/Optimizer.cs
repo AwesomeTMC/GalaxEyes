@@ -30,12 +30,14 @@ namespace GalaxEyes.Optimizers
         public override String ToString() => this.CallbackName;
     }
 
-    public class Result(ResultType type, string message, string affectedFile, List<OptimizerAction>? callbacks = null)
+    public class Result(ResultType type, string affectedFile, string groupMessage, string optimizerName, List<OptimizerAction>? callbacks = null, string resultSpecificMessage = "")
     {
         public List<OptimizerAction> Callbacks { get; set; } = callbacks ?? new();
         public ResultType Type { get; set; } = type;
-        public string Message { get; set; } = message;
+        public string Message { get; set; } = resultSpecificMessage;
         public string AffectedFile { get; set; } = affectedFile;
+        public string GroupMessage { get; set; } = groupMessage;
+        public string OptimizerName { get; set; } = optimizerName;
     }
     public abstract class Optimizer
     {

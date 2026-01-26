@@ -12,18 +12,90 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Tmds.DBus.Protocol;
 
 namespace GalaxEyes;
 
-public class OptimizerResultRow(string label, string filePath, string modDirectory, List<OptimizerAction> actions, OptimizerAction? selectedAction)
+public class OptimizerResultRow(string label, string filePath, string optimizerName, List<OptimizerAction> actions, OptimizerAction? selectedAction) : INotifyPropertyChanged
 {
     public string Label { get; set; } = label;
     public string FilePath { get; set; } = filePath;
 
-    public string VisiblePath { get; } = Path.GetRelativePath(modDirectory, filePath);
     public List<OptimizerAction> Actions { get; set; } = actions;
-    public OptimizerAction? SelectedAction { get; set; } = selectedAction;
+    private OptimizerAction? _selectedAction = selectedAction;
+    public OptimizerAction? SelectedAction
+    {
+        get => _selectedAction;
+        set
+        {
+            _selectedAction = value;
+            PropertyChanged?.Invoke(this, new(nameof(SelectedAction)));
+        }
+    }
+
+    public string OptimizerName { get; set; } = optimizerName;
+    public string MainMessage
+    {
+        get
+        {
+            if (Label != null && Label != "")
+            {
+                return Label;
+            }
+            string modDirectory = MainSettings.Instance.ModDirectory;
+            return Path.GetRelativePath(modDirectory, FilePath);
+        }
+    }
+    public string GrayMessage
+    {
+        get
+        {
+            string modDirectory = MainSettings.Instance.ModDirectory;
+            string path = Path.GetRelativePath(modDirectory, FilePath);
+            if (Label != null && Label != "")
+            {
+                return path + "\n" + OptimizerName;
+            }
+            return OptimizerName;
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+public class OptimizerResultGroup(List<OptimizerResultRow> optimizerResults, string groupMessage, List<OptimizerAction> actions, OptimizerAction? selectedAction, List<string> optimizerNames)
+{
+    public List<OptimizerResultRow> OptimizerResults { get; set; } = optimizerResults;
+    public string GroupMessage { get; set; } = groupMessage;
+    public List<string> OptimizerNames { get; set; } = optimizerNames;
+    public string GrayMessage
+    {
+        get
+        {
+            return OptimizerResults.Count + " result(s). " + String.Join(", ", OptimizerNames);
+        }
+    }
+    public List<OptimizerAction> Actions { get; set; } = actions;
+    private OptimizerAction? _selectedAction = selectedAction;
+    public OptimizerAction? SelectedAction
+    {
+        get => _selectedAction;
+        set
+        {
+            _selectedAction = value;
+            // Update all results in group with selected action if it has that action
+            foreach (OptimizerResultRow row in OptimizerResults)
+            {
+                foreach (OptimizerAction action in row.Actions)
+                {
+                    if (value == null || action.CallbackName.Equals(value.CallbackName))
+                    {
+                        row.SelectedAction = action;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 public abstract class RightPaneState { }
@@ -37,7 +109,7 @@ public sealed class LoadingState(String label) : RightPaneState
 
 public sealed class ResultsState : RightPaneState
 {
-    public ObservableCollection<OptimizerResultRow> ResultList { get; } = new();
+    public ObservableCollection<OptimizerResultGroup> ResultList { get; } = new();
 }
 
 public sealed class NoneFoundState : RightPaneState { }
@@ -52,8 +124,6 @@ public sealed class DoneState : RightPaneState { }
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    
-
     public MainWindow()
     {
 
@@ -165,13 +235,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
             foreach (Result result in tempResults)
             {
-                state.ResultList.Add(new OptimizerResultRow(
-                    result.Message,
-                    result.AffectedFile,
-                    targetDirectory,
-                    result.Callbacks,
-                    result.Callbacks.FirstOrDefault()
-                ));
+                Util.AddResult(state.ResultList, result, result.Callbacks.FirstOrDefault());
             }
 
             return state;
@@ -195,7 +259,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
                 catch (Exception e)
                 {
-                    tempResults.Add(new Result(ResultType.Error, e.ToString(), file));
+                    tempResults.Add(new Result(ResultType.Error, e.Source ?? e.ToString(), optimizer.OptimizerName, file, null, e.ToString()));
                 }
             }
         }
@@ -217,21 +281,25 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         List<Result> newResults = await Task.Run(() =>
         {
             List<Result> tempResults = new();
-            foreach (var result in resultsState.ResultList)
+            foreach (var group in resultsState.ResultList)
             {
-                if (result == null || result.SelectedAction == null)
-                    continue;
+                foreach (var result in group.OptimizerResults)
+                {
+                    if (result == null || result.SelectedAction == null)
+                        continue;
 
-                try
-                {
-                    tempResults.AddRange(result.SelectedAction.Callback());
+                    try
+                    {
+                        tempResults.AddRange(result.SelectedAction.Callback());
+                    }
+                    catch (Exception e)
+                    {
+                        Util.AddException(ref tempResults, e, result.FilePath, result.OptimizerName, result.SelectedAction.Callback);
+                    }
                 }
-                catch (Exception e)
-                {
-                    Util.AddError(ref tempResults, e.ToString(), result.FilePath, result.SelectedAction.Callback);
-                }
+
             }
-            
+
             return tempResults;
         });
 
@@ -246,7 +314,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
                 catch (Exception e)
                 {
-                    Util.AddError(ref tempResults, e.ToString(), optimizer.OptimizerName, () => { return optimizer.RunAfter(); });
+                    Util.AddException(ref tempResults, e, "All files", optimizer.OptimizerName, () => { return optimizer.RunAfter(); });
                 }
             }
             return tempResults;
@@ -255,9 +323,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
 
         resultsState.ResultList.Clear();
+
         foreach (Result result in newResults)
         {
-            resultsState.ResultList.Add(new OptimizerResultRow(result.Message, result.AffectedFile, MainSettings.Instance.ModDirectory, result.Callbacks, result.Callbacks.Count > 0 ? result.Callbacks[0] : null));
+            Util.AddResult(resultsState.ResultList, result, result.Callbacks.FirstOrDefault());
         }
 
         if (resultsState.ResultList.Count > 0)

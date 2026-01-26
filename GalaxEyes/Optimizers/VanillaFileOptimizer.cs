@@ -34,7 +34,8 @@ namespace GalaxEyes.Optimizers
 
             if (Settings.VanillaDirectory == "" || !Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
             {
-                Util.AddError(ref resultList, "Valid vanilla directory not set for Vanilla File Optimizer.", filePath, () => { return Check(filePath); });
+                string error = "Valid vanilla directory not set.";
+                Util.AddError(ref resultList, filePath, error, OptimizerName, () => { return Check(filePath); });
                 return resultList;
             }
 
@@ -59,7 +60,7 @@ namespace GalaxEyes.Optimizers
                         new OptimizerAction(() => { return RemoveFile(filePath); }, "Remove file"),
                         new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
                     };
-                    resultList.Add(new Result(ResultType.Optimize, "Vanilla file detected.", filePath, actions));
+                    resultList.Add(new Result(ResultType.Optimize, filePath, "Vanilla file(s) detected.", OptimizerName, actions));
                 }
             }
 

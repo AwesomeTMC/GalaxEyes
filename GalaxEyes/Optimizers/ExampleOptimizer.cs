@@ -34,7 +34,11 @@ namespace GalaxEyes.Optimizers
             String fileName = Path.GetFileName(filePath);
 
             if (Settings.CauseError)
-                Util.AddError(ref resultList, "Some error occured", filePath, () => { return Check(filePath); });
+                Util.AddError(ref resultList,
+                    filePath, 
+                    "Example optimizer ran into an error", 
+                    OptimizerName, () => { return Check(filePath); },
+                    "Set this to an empty string to not have an individual message for this result.");
             Thread.Sleep(Settings.SleepAmount);
 
             if (fileName.Contains("Unoptimized"))
@@ -44,7 +48,7 @@ namespace GalaxEyes.Optimizers
                     new OptimizerAction(() => { return OptimizeFile(filePath); }, "Rename file"),
                     new OptimizerAction(Util.NULL_ACTION, "Give up")
                 };
-                resultList.Add(new Result(ResultType.Optimize, "Your file isn't optimized.", filePath, actions));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "You have unoptimized file(s).", OptimizerName, actions));
             }
 
             return resultList;
