@@ -1,4 +1,9 @@
-﻿using GalaxEyes.Optimizers;
+﻿using Binary_Stream;
+using GalaxEyes.Optimizers;
+using Hack.io.Utility;
+using Hack.io.YAY0;
+using Hack.io.YAZ0;
+using jkr_lib;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -71,7 +76,7 @@ public static class Util
             "LayoutData",
             "ObjectData"
         };
-        if (!Directory.Exists(directory))
+        if (directory == "" || !Directory.Exists(directory))
         {
             return false;
         }
@@ -81,5 +86,45 @@ public static class Util
                 return false;
         }
         return true;
+    }
+
+    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string optimizerName, Func<List<Result>> retryCallback)
+    {
+        List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
+        [
+            (YAZ0.Check, YAZ0.Decompress),
+            (YAY0.Check, YAY0.Decompress)
+        ];
+        try
+        {
+            var data = FileUtil.ReadWithDecompression(arcPath, [.. DecompFuncs]);
+            if (data == null)
+            {
+                data = File.ReadAllBytes(arcPath);
+            }
+            return new JKRArchive(data);
+        }
+        catch (BadImageFormatException e)
+        {
+            Util.AddError(ref results, arcPath, "Bad magic for RARC", optimizerName, retryCallback, e.ToString());
+            return null;
+        }
+    }
+
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string optimizerName, JKRArchive arc, Func<List<Result>> retryCallback)
+    {
+        try
+        {
+            var data = arc.ToBytes();
+            StreamUtil.PushEndian(arc.Endian == Endian.Little ? false : true);
+            var yaz0_data = YAZ0.Compress_Strong(data, null);
+            File.WriteAllBytes(arcPath, yaz0_data);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Util.AddError(ref results, arcPath, "Failed to save archive", optimizerName, retryCallback, e.ToString());
+            return false;
+        }
     }
 }

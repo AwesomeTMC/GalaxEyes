@@ -251,7 +251,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         List<Result> tempResults = new();
         foreach (Optimizer? optimizer in optimizers)
         {
-            if (optimizer != null && optimizer.IsActive)
+            if (optimizer != null && optimizer.DoCheck(file))
             {
                 try
                 {

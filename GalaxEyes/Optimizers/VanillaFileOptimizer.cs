@@ -27,12 +27,9 @@ namespace GalaxEyes.Optimizers
         public override List<Result> Check(String filePath)
         {
             List<Result> resultList = new List<Result>();
-            if (!IsActive)
-                return resultList;
-
             String fileName = Path.GetFileName(filePath);
 
-            if (Settings.VanillaDirectory == "" || !Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
+            if (!Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
             {
                 string error = "Valid vanilla directory not set.";
                 Util.AddError(ref resultList, filePath, error, OptimizerName, () => { return Check(filePath); });

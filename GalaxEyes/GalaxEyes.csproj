@@ -27,6 +27,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\hackio\Hack.io.BCSV\Hack.io.BCSV.csproj" />
+    <ProjectReference Include="..\hackio\Hack.io.YAY0\Hack.io.YAY0.csproj" />
+    <ProjectReference Include="..\hackio\Hack.io.YAZ0\Hack.io.YAZ0.csproj" />
+    <ProjectReference Include="..\hackio\Hack.io\Hack.io.csproj" />
+    <ProjectReference Include="..\jkr_tool\jkr_lib\jkr_lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="OptimizerSettingsWindow.axaml.cs">
       <DependentUpon>OptimizerSettingsWindow.axaml</DependentUpon>
     </Compile>

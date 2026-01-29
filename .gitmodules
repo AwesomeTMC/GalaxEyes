@@ -1,0 +1,6 @@
+[submodule "hackio"]
+	path = hackio
+	url = https://github.com/SuperHackio/Hack.io.git
+[submodule "jkr_tool"]
+	path = jkr_tool
+	url = https://github.com/Lord-G-INC/jkr_tool.git

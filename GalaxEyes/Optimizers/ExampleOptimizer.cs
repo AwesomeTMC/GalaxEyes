@@ -28,9 +28,6 @@ namespace GalaxEyes.Optimizers
         public override List<Result> Check(String filePath)
         {
             List<Result> resultList = new List<Result>();
-            if (!IsActive)
-                return resultList;
-
             String fileName = Path.GetFileName(filePath);
 
             if (Settings.CauseError)

@@ -12,7 +12,8 @@ namespace GalaxEyes.Optimizers
         public static List<Optimizer> Items = new()
         {
             new ExampleOptimizer(),
-            new VanillaFileOptimizer()
+            new VanillaFileOptimizer(),
+            new AudioTableChecker()
         };
     }
 
@@ -39,17 +40,45 @@ namespace GalaxEyes.Optimizers
         public string GroupMessage { get; set; } = groupMessage;
         public string OptimizerName { get; set; } = optimizerName;
     }
-    public abstract class Optimizer
+    public abstract class Optimizer(String name)
     {
-        public String OptimizerName { get; set; } = "";
+        /// <summary>
+        /// The name of the optimizer. This will be displayed to the user.
+        /// </summary>
+        public String OptimizerName { get; set; } = name;
+        /// <summary>
+        /// Whether or not the optimizer is active.
+        /// Part of <see cref="DoCheck(string)"/>.
+        /// </summary>
         public Boolean IsActive { get; set; } = true;
-        public Optimizer(String name) { OptimizerName = name; }
-
+        /// <summary>
+        /// Runs a check on <paramref name="file"/>. 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
         public abstract List<Result> Check(String file);
+        /// <summary>
+        /// Associated settings for the optimizer.
+        /// See <see cref="ExampleOptimizer"/> for how to override this.
+        /// If set to null, the Settings button will not appear.
+        /// </summary>
         public abstract IHaveSettings? Settings { get; }
+        /// <summary>
+        /// Runs after every <see cref="OptimizerAction"/> is called. It is not necessarily after a success.
+        /// </summary>
+        /// <returns></returns>
         public virtual List<Result> RunAfter()
         {
             return new();
+        }
+        /// <summary>
+        /// Checks if the current optimizer should run <see cref="Check(string)"/> on the <paramref name="filePath"/> given.
+        /// </summary>
+        /// <param name="filePath">The absolute path of the file</param>
+        /// <returns></returns>
+        public virtual bool DoCheck(string filePath)
+        {
+            return IsActive;
         }
     }
 }
