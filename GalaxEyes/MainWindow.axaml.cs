@@ -167,8 +167,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         Debug.WriteLine("Starting scan...");
         RightPaneContent = new LoadingState("Scanning...");
 
+        SetAllEnabled(false);
         await Task.Yield();
         await StartScan();
+        SetAllEnabled(true);
     }
 
     private bool CheckDirectoryState()
@@ -215,7 +217,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         var optimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
         string targetDirectory = MainSettings.Instance.ModDirectory;
-
         RightPaneContent = new LoadingState("Scanning...");
 
         var finalState = await Task.Run(() =>
@@ -268,7 +269,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async void ResolveButtonEvent(object? sender, RoutedEventArgs args)
     {
+        SetAllEnabled(false);
         await StartResolve();
+        SetAllEnabled(true);
     }
 
     private async Task StartResolve()
@@ -395,5 +398,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void ThemeChanged(object? sender, SelectionChangedEventArgs e)
     {
         UpdateTheme(MainSettings.Instance.CurrentTheme);
+    }
+
+    public void SetAllEnabled(bool isEnabled)
+    {
+        OptimizerList.IsEnabled = isEnabled;
+        SettingsTab.IsEnabled = isEnabled;
+        StartScanButton.IsEnabled = isEnabled;
     }
 }

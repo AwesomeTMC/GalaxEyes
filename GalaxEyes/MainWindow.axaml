@@ -178,7 +178,8 @@
 													Content="Settings"
 													Height="24"
 													Padding="3" Click="OptimizerSettingsEvent"
-													VerticalAlignment="Center"/>
+													VerticalAlignment="Center"
+													IsVisible="{Binding HasSettings}"/>
 										</Grid>
 									</DataTemplate>
 								</ItemsControl.ItemTemplate>
@@ -216,7 +217,7 @@
 
 			</Grid>
 		</TabItem>
-		<TabItem Header="Settings">
+		<TabItem Header="Settings" x:Name="SettingsTab">
 
 			<ContentControl x:Name="SettingsRoot">
 

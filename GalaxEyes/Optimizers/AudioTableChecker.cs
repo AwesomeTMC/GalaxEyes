@@ -27,7 +27,6 @@ namespace GalaxEyes.Optimizers
 
         public override List<Result> Check(string filePath)
         {
-
             List<Result> resultList = new List<Result>();
             JKRArchive? arch = Util.TryLoadArchive(ref resultList, filePath, OptimizerName, () => { return Check(filePath); });
             if (arch == null)

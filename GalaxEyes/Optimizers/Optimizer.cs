@@ -80,5 +80,13 @@ namespace GalaxEyes.Optimizers
         {
             return IsActive;
         }
+        /// <summary>
+        /// Used by UI to check if this optimizer's settings are null or not.
+        /// </summary>
+        public bool HasSettings { get
+            {
+                return Settings != null;
+            } 
+        }
     }
 }
