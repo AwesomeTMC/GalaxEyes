@@ -7,3 +7,17 @@ It features:
 - AST Optimizer
 - ...and more!
 
+# Libraries
+
+[JATAst by Xayrga](https://github.com/XAYRGA/jatast).
+
+Powered by the [Hack.io Libraries](https://github.com/SuperHackio/Hack.io) by Super Hackio. Used with permission.
+
+[jkr_lib/jkr_tool and binary_stream by Lord Giganticus](https://github.com/Lord-G-INC/jkr_tool). 
+
+[Avalonia by AvaloniaUI](https://github.com/AvaloniaUI/Avalonia).
+
+[CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm/) and [System.Text.Json](https://www.nuget.org/packages/System.Text.Json) by Microsoft.
+
+
+See [THIRD_PARTY_LICENSES](/THIRD_PARTY_LICENSES) for their specific licenses.

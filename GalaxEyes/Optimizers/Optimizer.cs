@@ -13,7 +13,8 @@ namespace GalaxEyes.Optimizers
         {
             new ExampleOptimizer(),
             new VanillaFileOptimizer(),
-            new AudioTableChecker()
+            new AudioTableChecker(),
+            new ASTOptimizer(),
         };
     }
 
