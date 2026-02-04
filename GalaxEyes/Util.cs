@@ -125,4 +125,14 @@ public static class Util
             return false;
         }
     }
+
+    public static string CamelCaseSpace(string input)
+    {
+        string result = string.Concat(
+            input.Select((c, i) =>
+                i > 0 && char.IsUpper(c) ? " " + c : c.ToString()
+            )
+        );
+        return result;
+    }
 }

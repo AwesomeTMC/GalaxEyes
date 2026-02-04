@@ -15,7 +15,7 @@ namespace GalaxEyes.Optimizers
     {
         [JsonIgnore] public override string FileName => "vanilla_optimizer_settings.json";
 
-        [ObservableProperty] private string _vanillaDirectory = "";
+        [ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
     }
     public class VanillaFileOptimizer : Optimizer
     {

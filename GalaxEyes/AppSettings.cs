@@ -12,6 +12,18 @@ using System.Text.Json.Serialization;
 
 namespace GalaxEyes;
 
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class FolderAttribute(string desc) : Attribute
+{
+    public string Title { get; } = desc;
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class NameAttribute(string name) : Attribute
+{
+    public string Name { get; } = name;
+}
+
 public partial class MainSettings : FileSettings<MainSettings>
 {
     private static MainSettings? _instance;
@@ -34,7 +46,14 @@ public partial class LiveSettingEntry : ObservableObject
     private readonly PropertyInfo _property;
     private readonly object _owner;
 
-    public string Name => _property.Name;
+    public string Name { get
+        {
+            var attr = GetAttribute<NameAttribute>();
+            var defname = Util.CamelCaseSpace(_property.Name);
+
+            return attr == null ? defname : attr.Name;
+        } 
+    }
 
     public object? Value
     {
@@ -61,6 +80,9 @@ public partial class LiveSettingEntry : ObservableObject
         _property = property;
         _owner = owner;
     }
+
+    public T? GetAttribute<T>() where T : Attribute =>
+        _property.GetCustomAttribute<T>(inherit: true);
 }
 
 public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings

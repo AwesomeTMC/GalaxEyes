@@ -23,15 +23,31 @@
 			<DataTemplate x:Key="UInt32" x:DataType="local:LiveSettingEntry">
 				<NumericUpDown Value="{Binding Value, Mode=TwoWay}" Minimum="0" Maximum="4294967295"/>
 			</DataTemplate>
+			<DataTemplate x:Key="Folder" x:DataType="local:LiveSettingEntry">
+				<Grid ColumnDefinitions="Auto *" ColumnSpacing="10">
+					<Button Grid.Column="0" Click="ButtonOpenFolder"
+							Content="Open Folder"/>
+					<TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+				</Grid>
+				
+			</DataTemplate>
 		</local:SettingTemplateSelector>
 	</Window.Resources>
 
-	<ScrollViewer>
-		<ItemsRepeater
-		ItemTemplate="{StaticResource MySettingsSelector}" x:Name="AllSettings">
+	<ScrollViewer Margin="20">
+		<ItemsRepeater x:Name="AllSettings">
 			<ItemsRepeater.Layout>
 				<StackLayout Spacing="10" />
 			</ItemsRepeater.Layout>
+			<ItemsRepeater.ItemTemplate>
+				<DataTemplate>
+					<Grid ColumnDefinitions="Auto *" x:DataType="local:LiveSettingEntry" ColumnSpacing="10">
+						<TextBlock Text="{Binding Name}" VerticalAlignment="Center" Grid.Column="0"/>
+						<ContentControl Content="{Binding}" Grid.Column="1"
+										ContentTemplate="{StaticResource MySettingsSelector}"/>
+					</Grid>
+				</DataTemplate>
+			</ItemsRepeater.ItemTemplate>
 		</ItemsRepeater>
 	</ScrollViewer>
 </Window>

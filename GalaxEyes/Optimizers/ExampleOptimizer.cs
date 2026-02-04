@@ -11,7 +11,7 @@ namespace GalaxEyes.Optimizers
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
-        [ObservableProperty] private bool _causeError = false;
+        [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
         [ObservableProperty] private int _sleepAmount = 0;
     }
     public class ExampleOptimizer : Optimizer
