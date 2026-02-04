@@ -260,7 +260,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
                 catch (Exception e)
                 {
-                    tempResults.Add(new Result(ResultType.Error, e.Source ?? e.ToString(), optimizer.OptimizerName, file, null, e.ToString()));
+                    Util.AddException(ref tempResults, e, file, optimizer.OptimizerName, () => { return optimizer.Check(file); });
                 }
             }
         }

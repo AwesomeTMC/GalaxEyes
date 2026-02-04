@@ -18,7 +18,10 @@
 			</DataTemplate>
 
 			<DataTemplate x:Key="Int32" x:DataType="local:LiveSettingEntry">
-				<NumericUpDown Value="{Binding Value, Mode=TwoWay}" />
+				<NumericUpDown Value="{Binding Value, Mode=TwoWay}" Minimum="-2147483648" Maximum="2147483647"/>
+			</DataTemplate>
+			<DataTemplate x:Key="UInt32" x:DataType="local:LiveSettingEntry">
+				<NumericUpDown Value="{Binding Value, Mode=TwoWay}" Minimum="0" Maximum="4294967295"/>
 			</DataTemplate>
 		</local:SettingTemplateSelector>
 	</Window.Resources>
@@ -29,16 +32,6 @@
 			<ItemsRepeater.Layout>
 				<StackLayout Spacing="10" />
 			</ItemsRepeater.Layout>
-
-			<ItemsRepeater.ItemTemplate>
-				<DataTemplate>
-					<DockPanel Margin="5" x:DataType="local:LiveSettingEntry">
-						<TextBlock Text="{Binding Name}" Width="150" VerticalAlignment="Center"/>
-						<ContentControl Content="{Binding}"
-										ContentTemplate="{StaticResource MySettingsSelector}"/>
-					</DockPanel>
-				</DataTemplate>
-			</ItemsRepeater.ItemTemplate>
 		</ItemsRepeater>
 	</ScrollViewer>
 </Window>

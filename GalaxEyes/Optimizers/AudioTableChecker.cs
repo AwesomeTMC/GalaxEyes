@@ -3,7 +3,6 @@ using Avalonia.Controls.Documents;
 using Binary_Stream;
 using Hack.io.BCSV;
 using Hack.io.Utility;
-using Hack.io.YAY0;
 using Hack.io.YAZ0;
 using jkr_lib;
 using System;

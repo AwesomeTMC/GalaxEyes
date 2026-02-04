@@ -15,6 +15,7 @@ namespace GalaxEyes.Optimizers
             new VanillaFileOptimizer(),
             new AudioTableChecker(),
             new ASTOptimizer(),
+            new Yaz0Optimizer(),
         };
     }
 

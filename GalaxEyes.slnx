@@ -4,7 +4,6 @@
     <BuildDependency Project="AST/jatast.csproj" />
   </Project>
   <Project Path="hackio/Hack.io.BCSV/Hack.io.BCSV.csproj" />
-  <Project Path="hackio/Hack.io.YAY0/Hack.io.YAY0.csproj" />
   <Project Path="hackio/Hack.io.YAZ0/Hack.io.YAZ0.csproj" />
   <Project Path="hackio/Hack.io/Hack.io.csproj" />
   <Project Path="jkr_tool/binary_stream/BinaryStream/BinaryStream.csproj" />

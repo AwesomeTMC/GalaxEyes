@@ -3,6 +3,7 @@ using Avalonia.Controls.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,11 +41,18 @@ public partial class LiveSettingEntry : ObservableObject
         get => _property.GetValue(_owner);
         set
         {
-            var convertedValue = Convert.ChangeType(value, _property.PropertyType);
-            _property.SetValue(_owner, convertedValue);
+            try
+            {
+                var convertedValue = Convert.ChangeType(value, _property.PropertyType);
+                _property.SetValue(_owner, convertedValue);
 
-            OnPropertyChanged(nameof(Value));
-            (_owner as IHaveSettings)?.Save();
+                OnPropertyChanged(nameof(Value));
+                (_owner as IHaveSettings)?.Save();
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Invalid value entered, this shouldn't be printed.");
+            }
         }
     }
 

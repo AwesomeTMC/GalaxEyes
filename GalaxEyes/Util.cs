@@ -1,7 +1,6 @@
 ﻿using Binary_Stream;
 using GalaxEyes.Optimizers;
 using Hack.io.Utility;
-using Hack.io.YAY0;
 using Hack.io.YAZ0;
 using jkr_lib;
 using System;
@@ -92,8 +91,7 @@ public static class Util
     {
         List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
         [
-            (YAZ0.Check, YAZ0.Decompress),
-            (YAY0.Check, YAY0.Decompress)
+            (YAZ0.Check, YAZ0.Decompress)
         ];
         try
         {
@@ -111,13 +109,13 @@ public static class Util
         }
     }
 
-    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string optimizerName, JKRArchive arc, Func<List<Result>> retryCallback)
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string optimizerName, JKRArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
     {
         try
         {
             var data = arc.ToBytes();
             StreamUtil.PushEndian(arc.Endian == Endian.Little ? false : true);
-            var yaz0_data = YAZ0.Compress_Strong(data, null);
+            var yaz0_data = YAZ0.Compress_Strong(data, null, strength);
             File.WriteAllBytes(arcPath, yaz0_data);
             return true;
         }
