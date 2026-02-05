@@ -26,12 +26,7 @@ namespace GalaxEyes.Optimizers
             List<Result> resultList = new List<Result>();
 
             var file = File.OpenRead(filePath);
-            if (Settings.Strength > 0x1000 || Settings.Strength < 0)
-            {
-                Util.AddError(ref resultList, filePath, "YAZ0 Strength not in valid range (0 through 4096).", OptimizerName, () => { return Check(filePath); });
-                file.Close();
-                return resultList;
-            }
+            
             if (!YAZ0.Check(file))
             {
                 List<OptimizerAction> actions = new() {
@@ -82,6 +77,16 @@ namespace GalaxEyes.Optimizers
         public override bool DoCheck(string filePath)
         {
             return base.DoCheck(filePath) && filePath.EndsWith(".arc");
+        }
+
+        public override List<Result> SettingsCheck()
+        {
+            List<Result> results = new();
+            if (Settings.Strength > 0x1000 || Settings.Strength < 0)
+            {
+                Util.AddError(ref results, "*", "YAZ0 Strength not in valid range (0 through 4096).", OptimizerName, null);
+            }
+            return results;
         }
     }
 }

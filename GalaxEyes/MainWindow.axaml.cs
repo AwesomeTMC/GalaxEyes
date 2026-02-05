@@ -42,7 +42,7 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
                 return Label;
             }
             string modDirectory = MainSettings.Instance.ModDirectory;
-            return Path.GetRelativePath(modDirectory, FilePath);
+            return GetPathMessage(modDirectory);
         }
     }
     public string GrayMessage
@@ -50,7 +50,7 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
         get
         {
             string modDirectory = MainSettings.Instance.ModDirectory;
-            string path = Path.GetRelativePath(modDirectory, FilePath);
+            string path = GetPathMessage(modDirectory);
             if (Label != null && Label != "")
             {
                 return path + "\n" + OptimizerName;
@@ -60,6 +60,13 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private string GetPathMessage(string modDirectory)
+    {
+        if (FilePath == "*")
+            return "All files are affected.";
+        return Path.GetRelativePath(modDirectory, FilePath);
+    }
 }
 
 public class OptimizerResultGroup(List<OptimizerResultRow> optimizerResults, string groupMessage, List<OptimizerAction> actions, OptimizerAction? selectedAction, List<string> optimizerNames)
@@ -215,7 +222,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async Task StartScan()
     {
-        var optimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
+        var allOptimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
         string targetDirectory = MainSettings.Instance.ModDirectory;
         RightPaneContent = new LoadingState("Scanning...");
 
@@ -223,7 +230,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             List<Result> tempResults = new();
 
-            if (Directory.Exists(targetDirectory))
+            List<Optimizer> optimizers = new List<Optimizer>();
+            foreach (Optimizer optimizer in allOptimizers)
+            {
+                if (!optimizer.IsActive)
+                {
+                    continue;
+                }
+                var optimizerResults = optimizer.SettingsCheck();
+                if (optimizerResults.Count == 0)
+                    optimizers.Add(optimizer);
+                else
+                    tempResults.AddRange(optimizerResults);
+            }
+
+            if (Directory.Exists(targetDirectory) && optimizers.Count > 0)
             {
                 var files = Directory.EnumerateFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
                 foreach (String file in files)

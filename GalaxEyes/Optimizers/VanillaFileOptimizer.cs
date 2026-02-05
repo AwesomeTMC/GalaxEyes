@@ -28,14 +28,6 @@ namespace GalaxEyes.Optimizers
         {
             List<Result> resultList = new List<Result>();
             String fileName = Path.GetFileName(filePath);
-
-            if (!Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
-            {
-                string error = "Valid vanilla directory not set.";
-                Util.AddError(ref resultList, filePath, error, OptimizerName, () => { return Check(filePath); });
-                return resultList;
-            }
-
             string relativePath = Path.GetRelativePath(MainSettings.Instance.ModDirectory, filePath);
             string vanillaPath = Path.Combine(Settings.VanillaDirectory, relativePath);
 
@@ -75,6 +67,17 @@ namespace GalaxEyes.Optimizers
         {
             Util.RemoveEmptyFolders(MainSettings.Instance.ModDirectory);
             return new();
+        }
+
+        public override List<Result> SettingsCheck()
+        {
+            List<Result> results = new();
+            if (!Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
+            {
+                string error = "Valid vanilla directory not set.";
+                Util.AddError(ref results, "*", error, OptimizerName, null);
+            }
+            return results;
         }
     }
 }

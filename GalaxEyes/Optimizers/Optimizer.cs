@@ -90,5 +90,13 @@ namespace GalaxEyes.Optimizers
                 return Settings != null;
             } 
         }
+        /// <summary>
+        /// Checks if the current optimizer has any invalid/unset settings. Independent of any specific file, and run once before <see cref="DoCheck(string)"/>.
+        /// </summary>
+        /// <returns>A list of any error messages. Returns an empty list if there are no errors.</returns>
+        public virtual List<Result> SettingsCheck()
+        {
+            return new();
+        }
     }
 }

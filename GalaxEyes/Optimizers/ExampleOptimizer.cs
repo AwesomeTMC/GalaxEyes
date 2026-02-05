@@ -12,6 +12,7 @@ namespace GalaxEyes.Optimizers
         [JsonIgnore] public override string FileName => "example_settings.json";
 
         [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
+        [ObservableProperty] [property: Name("Cause independent error intentionally?")] private bool _causeIndependentError = false;
         [ObservableProperty] private int _sleepAmount = 0;
     }
     public class ExampleOptimizer : Optimizer
@@ -53,6 +54,20 @@ namespace GalaxEyes.Optimizers
             if (!File.Exists(newPath) && File.Exists(filePath))
                 File.Move(filePath, newPath);
             return new();
+        }
+
+        public override List<Result> SettingsCheck()
+        {
+            List<Result> results = new();
+            if (Settings.CauseIndependentError)
+            {
+                Util.AddError(ref results,
+                    "*",
+                    "Example optimizer ran into an error",
+                    OptimizerName, null,
+                    "Hi it's me, the independent error.");
+            }
+            return results;
         }
     }
 }

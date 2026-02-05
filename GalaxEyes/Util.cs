@@ -21,14 +21,14 @@ public static class Util
     {
         AddError(ref results, affectedFile, e.GetType().ToString(), optimizerName, retryCallback, e.ToString());
     }
-    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string optimizerName, Func<List<Result>> retryCallback, string resultSpecificMessage="")
+
+    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string optimizerName, Func<List<Result>>? retryCallback, string resultSpecificMessage="")
     {
-        List<OptimizerAction> standardActions = new()
-        {
-            new OptimizerAction(retryCallback, "Retry"),
-            new OptimizerAction(NULL_ACTION, "Ignore this once"),
-            // TODO: Add more ignore options
-        };
+
+        List<OptimizerAction> standardActions = new();
+        if (retryCallback != null)
+            standardActions.Add(new OptimizerAction(retryCallback, "Retry"));
+        standardActions.Add(new OptimizerAction(NULL_ACTION, "Ignore this once"));
 
         results.Add(new Result(ResultType.Error, affectedFile, groupMessage, optimizerName, standardActions, resultSpecificMessage));
     }
