@@ -18,6 +18,7 @@ namespace GalaxEyes;
 public static class Util
 {
     public static Func<List<Result>> NULL_ACTION = () => { return new(); };
+
     public static void AddException(ref List<Result> results, Exception e, string affectedFile, string optimizerName, Func<List<Result>> retryCallback)
     {
         AddError(ref results, affectedFile, e.GetType().ToString(), optimizerName, retryCallback, e.ToString());
@@ -117,7 +118,7 @@ public static class Util
             var data = arc.ToBytes();
             StreamUtil.PushEndian(arc.Endian == Endian.Little ? false : true);
             var yaz0_data = YAZ0.Compress_Strong(data, null, strength);
-            File.WriteAllBytes(arcPath, yaz0_data);
+            WriteAllBytesSafe(arcPath, yaz0_data);
             return true;
         }
         catch (Exception e)
@@ -145,5 +146,17 @@ public static class Util
         var file = iter.First<JKRFileNode>();
         var strm = new MemoryStream(file.Data);
         return strm;
+    }
+
+    /// <summary>
+    /// Similar to <see cref="File.WriteAllBytes(string, byte[])"/>, but uses a tmp path to ensure no data is lost.
+    /// </summary>
+    /// <param name="path">The path to write to.</param>
+    /// <param name="bytes">The data to write.</param>
+    public static void WriteAllBytesSafe(string path, byte[] bytes)
+    {
+        var tmpPath = path + ".tmp";
+        File.WriteAllBytes(tmpPath, bytes);
+        File.Move(tmpPath, path, true);
     }
 }

@@ -17,6 +17,7 @@ namespace GalaxEyes.Optimizers
             new ASTOptimizer(),
             new Yaz0Optimizer(),
             new KCLOptimizer(),
+            new CleanupOptimizer(),
         };
     }
 

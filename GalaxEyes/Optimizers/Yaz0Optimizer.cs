@@ -70,7 +70,7 @@ namespace GalaxEyes.Optimizers
 
         public List<Result> Write(string filePath, byte[] data)
         {
-            File.WriteAllBytes(filePath, data);
+            Util.WriteAllBytesSafe(filePath, data);
             return new();
         }
 

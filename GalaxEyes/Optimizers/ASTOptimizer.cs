@@ -73,15 +73,17 @@ namespace GalaxEyes.Optimizers
             var newLoopEnd = ast.LoopEnd * ratio;
             var oldFormat = ast.format;
 
+            // encode to pcm16 since that's the only format ffmpeg likes for ASTs
             ast.format = EncodeFormat.PCM16;
-            var tmpAstPath = filePath.Replace(".ast", ".tmp.ast");
-            OutAst(ast, tmpAstPath);
+            var pcmAstPath = filePath.Replace(".ast", ".tmp.pcm16.ast");
+            OutAst(ast, pcmAstPath);
 
             // Resample using ffmpeg
+            var resampledAstPath = filePath.Replace(".ast", ".tmp.resampled.ast");
             var startInfo = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-y -i \"{tmpAstPath}\" -ar 32000 \"{filePath}\"",
+                Arguments = $"-y -i \"{pcmAstPath}\" -ar 32000 \"{resampledAstPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -93,38 +95,40 @@ namespace GalaxEyes.Optimizers
             process.WaitForExit();
             if (process.ExitCode != 0)
             {
-                Util.AddError(ref results, filePath, "FFMPEG ran into an issue", OptimizerName, () => { return ResampleAST(filePath); }, stderr);
+                Util.AddError(ref results, filePath, "FFMPEG ran into an issue. Do you have it installed?", OptimizerName, () => { return ResampleAST(filePath); }, stderr);
                 return results;
             }
-            File.Delete(tmpAstPath);
-
+            File.Delete(pcmAstPath);
 
             // Convert back to the old format and fix loop points
-            ast = InAst(filePath);
+            ast = InAst(resampledAstPath);
             ast.format = oldFormat;
             ast.LoopStart = newLoopStart;
             ast.LoopEnd = newLoopEnd;
+            File.Delete(resampledAstPath);
             OutAst(ast, filePath);
+            
             return results;
         }
 
         private AST InAst(string filePath)
         {
-            var waveInput = File.OpenRead(filePath);
-            var waveReader = new BeBinaryReader(waveInput);
+            using var waveInput = File.OpenRead(filePath);
+            using var waveReader = new BeBinaryReader(waveInput);
             var ast = new AST();
             ast.ReadFromStream(waveReader);
-            waveReader.Close();
             return ast;
         }
 
         private void OutAst(AST ast, string filePath)
         {
-            var astOutput = File.OpenWrite(filePath);
-            var astWriter = new BeBinaryWriter(astOutput);
+            var tmpPath = filePath + ".tmp";
+            using var astOutput = File.Create(tmpPath);
+            using var astWriter = new BeBinaryWriter(astOutput);
             astWriter.Flush();
             ast.WriteToStream(astWriter);
-            astWriter.Close();
+
+            File.Move(tmpPath, filePath, true);
         }
     }
 }
