@@ -3,12 +3,19 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationIcon>GalaxEyes.ico</ApplicationIcon>
+
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="GalaxEyes.ico" />
+    <None Include="../README.md;../THIRD_PARTY_LICENSES;LICENSE">
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -40,4 +47,12 @@
       <DependentUpon>OptimizerSettingsWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <Target Name="StripDebugFiles" AfterTargets="Publish">
+  <ItemGroup>
+    <DebugFiles Include="$(PublishDir)**\*.pdb;$(PublishDir)**\*.xml" />
+  </ItemGroup>
+  <Delete Files="@(DebugFiles)" />
+</Target>
+
 </Project>

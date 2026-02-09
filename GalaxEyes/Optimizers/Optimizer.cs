@@ -11,7 +11,9 @@ namespace GalaxEyes.Optimizers
     {
         public static List<Optimizer> Items = new()
         {
+#if DEBUG
             new ExampleOptimizer(),
+#endif
             new VanillaFileOptimizer(),
             new AudioTableChecker(),
             new ASTOptimizer(),

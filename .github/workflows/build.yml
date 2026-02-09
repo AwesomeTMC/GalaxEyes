@@ -1,0 +1,51 @@
+name: Build GalaxEyes
+
+permissions:
+    contents: write
+    packages: write
+    id-token: write
+
+on:
+    push:
+        branches: [ main ]
+
+jobs:
+    build:
+        runs-on: windows-latest
+
+        steps:
+        - name: Start Checkout
+          uses: actions/checkout@v4.1.1
+          with:
+            submodules: recursive
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4.0.0
+          with:
+            dotnet-version: '8.x.x'
+        - name: Get current date
+          id: date
+          shell: bash
+          run: echo "BUILD_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        - name: Build
+          shell: cmd
+          working-directory: GalaxEyes
+          run: |
+            dotnet restore
+            dotnet publish -p:PublishProfile=Linux-x64
+            dotnet publish -p:PublishProfile=osx-x64.pubxml
+            dotnet publish -p:PublishProfile=Windows-x64.pubxml
+        - name: Zip Folders
+          shell: cmd
+          run: |
+            7z a GalaxEyes-linux-x64-${{ env.BUILD_DATE }}.zip .\GalaxEyes\bin\Release\net8.0\linux-x64\publish\*
+            7z a GalaxEyes-mac-x64-${{ env.BUILD_DATE }}.zip .\GalaxEyes\bin\Release\net8.0\osx-x64\publish\*
+            7z a GalaxEyes-windows-x64-${{ env.BUILD_DATE }}.zip .\GalaxEyes\bin\Release\net8.0\win-x64\publish\*
+        - name: Release
+          uses: "marvinpinto/action-automatic-releases@latest"
+          with:
+            repo_token: "${{ secrets.GITHUB_TOKEN }}"
+            automatic_release_tag: auto
+            title: "Build ${{ github.event.repository.updated_at }}"
+            prerelease: true
+            files: |
+                *.zip

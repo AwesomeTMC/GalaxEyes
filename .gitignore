@@ -7,3 +7,4 @@ UpgradeLog.htm
 /AST/obj
 /Hack.IO.KCL/obj
 /Hack.IO.KCL/bin
+*.user

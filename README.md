@@ -4,7 +4,7 @@
 It features:
 - Removing vanilla files from your mod
 - Merging identical collision codes
-- AST Optimizer
+- Resampling and re-encoding your ASTs to be more efficient
 - ...and more!
 
 # Libraries
@@ -21,3 +21,21 @@ Powered by the [Hack.io Libraries](https://github.com/SuperHackio/Hack.io) by Su
 
 
 See [THIRD_PARTY_LICENSES](/THIRD_PARTY_LICENSES) for their specific licenses.
+
+# Building
+
+All you will need is .NET SDK 8.
+
+First, download this source code and all its submodules:
+
+`git clone --recurse-submodules https://github.com/AwesomeTMC/GalaxEyes.git`
+
+Then, in the folder downloaded, run:
+
+`dotnet publish GalaxEyes/GalaxEyes.csproj -c Release -p:PublishProfile=Windows-x64`
+
+Replace `Windows-x64` with `Linux-x64` or `osx-x64`, depending on your operating system.
+
+The resulting executable should be in `/GalaxEyes/bin/Release/net8.0/win-x64/publish/` (replace `win-x64` with `linux-x64` or `osx-x64`)
+
+If you wish to contribute, just open the included `GalaxEyes.slnx` with Visual Studio and click the play button at the top (it should say "GalaxEyes").
