@@ -20,7 +20,7 @@
 										   Text="{Binding GroupMessage}" TextWrapping="Wrap"/>
 								<TextBlock Text="{Binding GrayMessage}" Foreground="Gray" TextWrapping="Wrap"/>
 							</StackPanel>
-							<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0,0,0"
+							<ComboBox x:Name="actionComboBox" SelectedIndex="0" Margin="8,0,0,0" VerticalAlignment="Center"
 									  MaxDropDownHeight="300"
 									  ItemsSource="{Binding Actions}"
 									  SelectedItem="{Binding SelectedAction}" Grid.Column="1">

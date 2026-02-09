@@ -11,7 +11,7 @@ It features:
 
 [JATAst by Xayrga](https://github.com/XAYRGA/jatast).
 
-Powered by the [Hack.io Libraries](https://github.com/SuperHackio/Hack.io) by Super Hackio. Used with permission.
+Powered by the [Hack.io Libraries](https://github.com/SuperHackio/Hack.io) by Super Hackio. Used with permission. The Hack.IO.KCL included in this repository is based on Bavario's fork of Hack.io.
 
 [jkr_lib/jkr_tool and binary_stream by Lord Giganticus](https://github.com/Lord-G-INC/jkr_tool). 
 

@@ -1,5 +1,6 @@
 ﻿using Binary_Stream;
 using GalaxEyes.Optimizers;
+using Hack.io.KCL;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
 using jkr_lib;
@@ -134,5 +135,15 @@ public static class Util
             )
         );
         return result;
+    }
+
+    public static MemoryStream? TryLoadFileFromArc(JKRArchive arc, string filePath)
+    {
+        var iter = arc.FindFile(filePath);
+        if (iter.Count() == 0)
+            return null;
+        var file = iter.First<JKRFileNode>();
+        var strm = new MemoryStream(file.Data);
+        return strm;
     }
 }

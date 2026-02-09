@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AST\jatast.csproj" />
+    <ProjectReference Include="..\Hack.IO.KCL\Hack.io.KCL.csproj" />
     <ProjectReference Include="..\hackio\Hack.io.BCSV\Hack.io.BCSV.csproj" />
     <ProjectReference Include="..\hackio\Hack.io.YAZ0\Hack.io.YAZ0.csproj" />
     <ProjectReference Include="..\hackio\Hack.io\Hack.io.csproj" />

@@ -3,6 +3,7 @@
   <Project Path="GalaxEyes/GalaxEyes.csproj">
     <BuildDependency Project="AST/jatast.csproj" />
   </Project>
+  <Project Path="Hack.IO.KCL/Hack.io.KCL.csproj" Id="fc98f9d9-a0cb-4c68-88bf-6c35f09a9751" />
   <Project Path="hackio/Hack.io.BCSV/Hack.io.BCSV.csproj" />
   <Project Path="hackio/Hack.io.YAZ0/Hack.io.YAZ0.csproj" />
   <Project Path="hackio/Hack.io/Hack.io.csproj" />
