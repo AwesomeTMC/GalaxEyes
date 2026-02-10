@@ -1,6 +1,8 @@
 ![GalaxEyes banner](banner.png)
 **GalaxEyes** is a tool for Super Mario Galaxy 2 that optimizes and checks for issues in your mod. 
 
+It's currently work in progress, so there may be bugs and things that will be changed. I will not be accepting pull requests currently.
+
 It features:
 - Removing vanilla files from your mod
 - Merging identical collision codes
