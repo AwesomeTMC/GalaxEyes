@@ -68,9 +68,9 @@ namespace GalaxEyes.Optimizers
         {
             List<Result> results = new();
             var ast = InAst(filePath);
-            var ratio = (32000 / ast.SampleRate);
-            var newLoopStart = ast.LoopStart * ratio;
-            var newLoopEnd = ast.LoopEnd * ratio;
+            double ratio = (32000f / ast.SampleRate);
+            var newLoopStart = (int)Math.Round(ast.LoopStart * ratio);
+            var newLoopEnd = (int)Math.Round(ast.LoopEnd * ratio);
             var oldFormat = ast.format;
 
             // encode to pcm16 since that's the only format ffmpeg likes for ASTs
