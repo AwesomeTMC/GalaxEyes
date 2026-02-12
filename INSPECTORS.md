@@ -41,7 +41,9 @@ The attributes that already exist are:
 ### `[property: Folder("What to say on the open folder dialog")]`
 Adds an "Open Folder" button that lets the user select a directory.
 You can use it like this:
-(Code snippet)
+```c#
+[ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
+```
 ### `[property: Name("Custom name for the setting")]`
 Overrides the automatically generated display name for the setting.
 ## Custom Attributes
