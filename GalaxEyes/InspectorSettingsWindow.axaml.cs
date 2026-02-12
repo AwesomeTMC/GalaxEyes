@@ -4,28 +4,28 @@ using Avalonia.Controls.Templates;
 using Avalonia.Markup.Xaml;
 using Avalonia.Metadata;
 using Avalonia.Platform.Storage;
-using GalaxEyes.Optimizers;
+using GalaxEyes.Inspectors;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 
 namespace GalaxEyes;
 
-public partial class OptimizerSettingsWindow : Window, INotifyPropertyChanged
+public partial class InspectorSettingsWindow : Window, INotifyPropertyChanged
 {
-    public OptimizerSettingsWindow(Optimizer associatedOptimizer)
+    public InspectorSettingsWindow(Inspector associatedInspector)
     {
-        AssociatedOptimizer = associatedOptimizer;
+        AssociatedInspector = associatedInspector;
         InitializeComponent();
         DataContext = this;
-        if (AssociatedOptimizer.Settings != null)
+        if (AssociatedInspector.Settings != null)
         {
-            AllSettings.ItemsSource = AssociatedOptimizer.Settings.GetEditableEntries();
+            AllSettings.ItemsSource = AssociatedInspector.Settings.GetEditableEntries();
         }
 
     }
 
-    public Optimizer AssociatedOptimizer { get; set; }
+    public Inspector AssociatedInspector { get; set; }
 
     private async void ButtonOpenFolder(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {

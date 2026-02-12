@@ -8,9 +8,9 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
-    public class ASTOptimizer : Optimizer
+    public class ASTOptimizer : Inspector
     {
         public ASTOptimizer() : base("AST Optimizer")
         {
@@ -24,21 +24,21 @@ namespace GalaxEyes.Optimizers
             var ast = InAst(filePath);
             if (ast.format == EncodeFormat.PCM16)
             {
-                List<OptimizerAction> actions = new()
+                List<InspectorAction> actions = new()
                 {
-                    new OptimizerAction(() => {return ADPCMEncodeAST(filePath); }, "ADPCM Encode AST"),
-                    new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => {return ADPCMEncodeAST(filePath); }, "ADPCM Encode AST"),
+                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "AST encoded in PCM16. Try encoding it in ADPCM.", OptimizerName, actions));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "AST encoded in PCM16. Try encoding it in ADPCM.", InspectorName, actions));
             }
             if (ast.SampleRate > 32000)
             {
-                List<OptimizerAction> actions = new()
+                List<InspectorAction> actions = new()
                 {
-                    new OptimizerAction(() => {return ResampleAST(filePath); }, "Resample to 32khz"),
-                    new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => {return ResampleAST(filePath); }, "Resample to 32khz"),
+                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "AST sample rate > 32khz.", OptimizerName, actions, ast.SampleRate.ToString()));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "AST sample rate > 32khz.", InspectorName, actions, ast.SampleRate.ToString()));
             }
             return resultList;
         }
@@ -95,7 +95,7 @@ namespace GalaxEyes.Optimizers
             process.WaitForExit();
             if (process.ExitCode != 0)
             {
-                Util.AddError(ref results, filePath, "FFMPEG ran into an issue. Do you have it installed?", OptimizerName, () => { return ResampleAST(filePath); }, stderr);
+                Util.AddError(ref results, filePath, "FFMPEG ran into an issue. Do you have it installed?", InspectorName, () => { return ResampleAST(filePath); }, stderr);
                 return results;
             }
             File.Delete(pcmAstPath);

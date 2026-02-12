@@ -6,7 +6,7 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
     public partial class Yaz0Settings : FileSettings<Yaz0Settings>
     {
@@ -14,7 +14,7 @@ namespace GalaxEyes.Optimizers
 
         [ObservableProperty] private uint _strength = 0x1000;
     }
-    public class Yaz0Optimizer : Optimizer
+    public class Yaz0Optimizer : Inspector
     {
         public Yaz0Optimizer() : base("Yaz0 Optimizer")
         {
@@ -29,11 +29,11 @@ namespace GalaxEyes.Optimizers
             
             if (!YAZ0.Check(file))
             {
-                List<OptimizerAction> actions = new() {
-                    new OptimizerAction(() => { return Encode(filePath, null); }, "Compress file"),
-                    new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+                List<InspectorAction> actions = new() {
+                    new InspectorAction(() => { return Encode(filePath, null); }, "Compress file"),
+                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "Uncompressed file(s) detected.", OptimizerName, actions));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "Uncompressed file(s) detected.", InspectorName, actions));
             }
             file.Close();
             return resultList;
@@ -48,10 +48,10 @@ namespace GalaxEyes.Optimizers
             var oldData = File.ReadAllBytes(filePath);
             var oldSize = oldData.Length;
             
-            var file = Util.TryLoadArchive(ref results, filePath, OptimizerName, thisFunc);
+            var file = Util.TryLoadArchive(ref results, filePath, InspectorName, thisFunc);
             if (file == null)
                 return results;
-            Util.TrySaveArchive(ref results, filePath, OptimizerName, file, thisFunc, Settings.Strength);
+            Util.TrySaveArchive(ref results, filePath, InspectorName, file, thisFunc, Settings.Strength);
 
             var newFile = File.OpenRead(filePath);
             var newSize = newFile.Length;
@@ -59,11 +59,11 @@ namespace GalaxEyes.Optimizers
 
             if (oldSize < newSize)
             {
-                List<OptimizerAction> actions = new() {
-                    new OptimizerAction(() => { return Write(filePath, oldData); }, "Stay with old file"),
-                    new OptimizerAction(Util.NULL_ACTION, "Stay with new file")
+                List<InspectorAction> actions = new() {
+                    new InspectorAction(() => { return Write(filePath, oldData); }, "Stay with old file"),
+                    new InspectorAction(Util.NULL_ACTION, "Stay with new file")
                 };
-                results.Add(new Result(ResultType.Warn, filePath, "Old archive size is smaller than new size.", OptimizerName, actions));
+                results.Add(new Result(ResultType.Warn, filePath, "Old archive size is smaller than new size.", InspectorName, actions));
             }
             return results;
         }
@@ -84,7 +84,7 @@ namespace GalaxEyes.Optimizers
             List<Result> results = new();
             if (Settings.Strength > 0x1000 || Settings.Strength < 0)
             {
-                Util.AddError(ref results, "*", "YAZ0 Strength not in valid range (0 through 4096).", OptimizerName, null);
+                Util.AddError(ref results, "*", "YAZ0 Strength not in valid range (0 through 4096).", InspectorName, null);
             }
             return results;
         }

@@ -12,10 +12,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
 
-    public class AudioTableChecker : Optimizer
+    public class AudioTableChecker : Inspector
     {
         public static uint STAGE_NAME = 0xE4EC2289;
         public static uint SCENARIO_NO = 0xED08B591;
@@ -27,7 +27,7 @@ namespace GalaxEyes.Optimizers
         public override List<Result> Check(string filePath)
         {
             List<Result> resultList = new List<Result>();
-            JKRArchive? arch = Util.TryLoadArchive(ref resultList, filePath, OptimizerName, () => { return Check(filePath); });
+            JKRArchive? arch = Util.TryLoadArchive(ref resultList, filePath, InspectorName, () => { return Check(filePath); });
             if (arch == null)
                 return resultList;
 
@@ -35,7 +35,7 @@ namespace GalaxEyes.Optimizers
             var stageBgmInfo = arch.FindFile("StageBgmInfo.bcsv").First<JKRFileNode>();
             if (scenarioBgmInfo == null || stageBgmInfo == null)
             {
-                Util.AddError(ref resultList, filePath, "StageBgmInfo or ScenarioBgmInfo not found", OptimizerName, () => { return Check(filePath); });
+                Util.AddError(ref resultList, filePath, "StageBgmInfo or ScenarioBgmInfo not found", InspectorName, () => { return Check(filePath); });
                 return resultList;
             }
 
@@ -46,32 +46,32 @@ namespace GalaxEyes.Optimizers
             {
                 if (!scenarioBgmStages.Contains(stageBgmStage))
                 {
-                    List<OptimizerAction> actions = new()
+                    List<InspectorAction> actions = new()
                     {
-                        new OptimizerAction(Util.NULL_ACTION, "Ignore this once"),
-                        new OptimizerAction(() => {
+                        new InspectorAction(Util.NULL_ACTION, "Ignore this once"),
+                        new InspectorAction(() => {
                             var newEntry = new BCSV.Entry();
                             newEntry.Add(STAGE_NAME, stageBgmStage);
                             newEntry.Add(SCENARIO_NO, 0);
                             return AddEntry(filePath, "ScenarioBgmInfo.bcsv", newEntry); },
                             "Add stage to ScenarioBgmInfo")
                     };
-                    resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in StageBgmInfo, but not ScenarioBgmInfo. Your music might be muted.", OptimizerName, actions, stageBgmStage));
+                    resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in StageBgmInfo, but not ScenarioBgmInfo. Your music might be muted.", InspectorName, actions, stageBgmStage));
                 }
                 scenarioBgmStages.Remove(stageBgmStage);
             }
             foreach (string scenarioBgmStage in scenarioBgmStages)
             {
-                List<OptimizerAction> actions = new()
+                List<InspectorAction> actions = new()
                 {
-                    new OptimizerAction(() => {
+                    new InspectorAction(() => {
                             var newEntry = new BCSV.Entry();
                             newEntry.Add(STAGE_NAME, scenarioBgmStage);
 
                             return AddEntry(filePath, "StageBgmInfo.bcsv", newEntry); }, "Add stage to StageBgmInfo"),
-                    new OptimizerAction(Util.NULL_ACTION, "Ignore this once"),
+                    new InspectorAction(Util.NULL_ACTION, "Ignore this once"),
                 };
-                resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in ScenarioBgmInfo, but not StageBgmInfo. This will cause a crash.", OptimizerName, actions, scenarioBgmStage));
+                resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in ScenarioBgmInfo, but not StageBgmInfo. This will cause a crash.", InspectorName, actions, scenarioBgmStage));
             }
             return resultList;
         }
@@ -99,7 +99,7 @@ namespace GalaxEyes.Optimizers
             List<Result> resultList = new List<Result>();
 
             // Load archive
-            JKRArchive? arch = Util.TryLoadArchive(ref resultList, arcPath, OptimizerName, thisFunc);
+            JKRArchive? arch = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
             if (arch == null)
             {
                 // It had an error while loading archive. It has been stored in resultList
@@ -110,7 +110,7 @@ namespace GalaxEyes.Optimizers
             var bcsvFile = arch.FindFile(bcsvPath)?.First<JKRFileNode>();
             if (bcsvFile == null)
             {
-                Util.AddError(ref resultList, arcPath, "File not found", OptimizerName, thisFunc, bcsvPath);
+                Util.AddError(ref resultList, arcPath, "File not found", InspectorName, thisFunc, bcsvPath);
                 return resultList;
             }
             BCSV bcsv = new BCSV();
@@ -126,7 +126,7 @@ namespace GalaxEyes.Optimizers
             // Save
             bcsv.Save(data);
             bcsvFile.SetFileData(data.ToArray());
-            Util.TrySaveArchive(ref resultList, arcPath, OptimizerName, arch, thisFunc);
+            Util.TrySaveArchive(ref resultList, arcPath, InspectorName, arch, thisFunc);
             return new();
         }
 

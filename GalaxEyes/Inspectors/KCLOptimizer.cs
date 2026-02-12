@@ -12,7 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
     public partial class KCLSettings : FileSettings<KCLSettings>
     {
@@ -22,7 +22,7 @@ namespace GalaxEyes.Optimizers
         [ObservableProperty] private uint _maxTrianglesPerCube = 25;
         [ObservableProperty] private uint _minCubeSize = 8;
     }
-    public class KCLOptimizer : Optimizer
+    public class KCLOptimizer : Inspector
     {
         public KCLOptimizer() : base("KCL/PA Optimizer")
         {
@@ -33,7 +33,7 @@ namespace GalaxEyes.Optimizers
         {
             List<Result> resultList = new List<Result>();
 
-            var arc = Util.TryLoadArchive(ref resultList, filePath, OptimizerName, () => { return Check(filePath); });
+            var arc = Util.TryLoadArchive(ref resultList, filePath, InspectorName, () => { return Check(filePath); });
             if (arc == null)
                 return resultList;
             
@@ -49,12 +49,12 @@ namespace GalaxEyes.Optimizers
             if (dupeCount > Settings.MinimumDuplicates)
             {
                 
-                List<OptimizerAction> actions = new()
+                List<InspectorAction> actions = new()
                 {
-                    new OptimizerAction(() => { return RemoveDuplicates(filePath);  }, "Remove duplicates"),
-                    new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => { return RemoveDuplicates(filePath);  }, "Remove duplicates"),
+                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", OptimizerName, actions, dupeCount.ToString()));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", InspectorName, actions, dupeCount.ToString()));
             }
 
             return resultList;
@@ -160,7 +160,7 @@ namespace GalaxEyes.Optimizers
         {
             List<Result> resultList = new();
             var thisFunc = () => { return RemoveDuplicates(arcPath); };
-            var arc = Util.TryLoadArchive(ref resultList, arcPath, OptimizerName, thisFunc);
+            var arc = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
             if (arc == null)
                 return resultList;
             var objectName = Path.GetFileName(arcPath).Replace(".arc", "");
@@ -196,7 +196,7 @@ namespace GalaxEyes.Optimizers
             
             OutKcl(arc, newKcl, objectName + ".kcl");
             OutPa(arc, pa, objectName + ".pa");
-            Util.TrySaveArchive(ref resultList, arcPath, OptimizerName, arc, thisFunc);
+            Util.TrySaveArchive(ref resultList, arcPath, InspectorName, arc, thisFunc);
             return resultList;
         }
     }

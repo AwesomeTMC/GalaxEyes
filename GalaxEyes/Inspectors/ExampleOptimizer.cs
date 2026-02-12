@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
     public partial class ExampleSettings : FileSettings<ExampleSettings>
     {
@@ -15,7 +15,7 @@ namespace GalaxEyes.Optimizers
         [ObservableProperty] [property: Name("Cause independent error intentionally?")] private bool _causeIndependentError = false;
         [ObservableProperty] private int _sleepAmount = 0;
     }
-    public class ExampleOptimizer : Optimizer
+    public class ExampleOptimizer : Inspector
     {
         public ExampleOptimizer() : base("Example Optimizer")
         {
@@ -31,18 +31,18 @@ namespace GalaxEyes.Optimizers
                 Util.AddError(ref resultList,
                     filePath, 
                     "Example optimizer ran into an error", 
-                    OptimizerName, () => { return Check(filePath); },
+                    InspectorName, () => { return Check(filePath); },
                     "Set this to an empty string to not have an individual message for this result.");
             Thread.Sleep(Settings.SleepAmount);
 
             if (fileName.Contains("Unoptimized"))
             {
                 // declare the actions the user can take
-                List<OptimizerAction> actions = new() {
-                    new OptimizerAction(() => { return OptimizeFile(filePath); }, "Rename file"),
-                    new OptimizerAction(Util.NULL_ACTION, "Give up")
+                List<InspectorAction> actions = new() {
+                    new InspectorAction(() => { return OptimizeFile(filePath); }, "Rename file"),
+                    new InspectorAction(Util.NULL_ACTION, "Give up")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "You have unoptimized file(s).", OptimizerName, actions));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "You have unoptimized file(s).", InspectorName, actions));
             }
 
             return resultList;
@@ -64,7 +64,7 @@ namespace GalaxEyes.Optimizers
                 Util.AddError(ref results,
                     "*",
                     "Example optimizer ran into an error",
-                    OptimizerName, null,
+                    InspectorName, null,
                     "Hi it's me, the independent error.");
             }
             return results;

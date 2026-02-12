@@ -43,8 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="OptimizerSettingsWindow.axaml.cs">
-      <DependentUpon>OptimizerSettingsWindow.axaml</DependentUpon>
+    <Compile Update="InspectorSettingsWindow.axaml.cs">
+      <DependentUpon>InspectorSettingsWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 

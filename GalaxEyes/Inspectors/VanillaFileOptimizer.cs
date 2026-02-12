@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
     public partial class VanillaFileSettings : FileSettings<VanillaFileSettings>
     {
@@ -17,7 +17,7 @@ namespace GalaxEyes.Optimizers
 
         [ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
     }
-    public class VanillaFileOptimizer : Optimizer
+    public class VanillaFileOptimizer : Inspector
     {
         public VanillaFileOptimizer() : base("Vanilla File Optimizer")
         {
@@ -45,11 +45,11 @@ namespace GalaxEyes.Optimizers
 
                 if (hash1.SequenceEqual(hash2))
                 {
-                    List<OptimizerAction> actions = new() {
-                        new OptimizerAction(() => { return RemoveFile(filePath); }, "Remove file"),
-                        new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+                    List<InspectorAction> actions = new() {
+                        new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file"),
+                        new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                     };
-                    resultList.Add(new Result(ResultType.Optimize, filePath, "Vanilla file(s) detected.", OptimizerName, actions));
+                    resultList.Add(new Result(ResultType.Optimize, filePath, "Vanilla file(s) detected.", InspectorName, actions));
                 }
             }
 
@@ -75,7 +75,7 @@ namespace GalaxEyes.Optimizers
             if (!Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
             {
                 string error = "Valid vanilla directory not set.";
-                Util.AddError(ref results, "*", error, OptimizerName, null);
+                Util.AddError(ref results, "*", error, InspectorName, null);
             }
             return results;
         }

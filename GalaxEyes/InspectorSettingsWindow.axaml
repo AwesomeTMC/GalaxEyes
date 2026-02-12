@@ -4,9 +4,9 @@
 		xmlns:local="using:GalaxEyes"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-		x:Class="GalaxEyes.OptimizerSettingsWindow"
-		x:DataType="local:OptimizerSettingsWindow"
-		Title="{Binding AssociatedOptimizer.OptimizerName}">
+		x:Class="GalaxEyes.InspectorSettingsWindow"
+		x:DataType="local:InspectorSettingsWindow"
+		Title="{Binding AssociatedInspector.InspectorName}">
 	<Window.Resources>
 		<local:SettingTemplateSelector x:Key="MySettingsSelector">
 			<DataTemplate x:Key="Boolean" x:DataType="local:LiveSettingEntry">

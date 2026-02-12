@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
-using GalaxEyes.Optimizers;
+using GalaxEyes.Inspectors;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,14 +15,14 @@ using System.Threading.Tasks;
 
 namespace GalaxEyes;
 
-public class OptimizerResultRow(string label, string filePath, string optimizerName, List<OptimizerAction> actions, OptimizerAction? selectedAction) : INotifyPropertyChanged
+public class InspectorResultRow(string label, string filePath, string inspectorName, List<InspectorAction> actions, InspectorAction? selectedAction) : INotifyPropertyChanged
 {
     public string Label { get; set; } = label;
     public string FilePath { get; set; } = filePath;
 
-    public List<OptimizerAction> Actions { get; set; } = actions;
-    private OptimizerAction? _selectedAction = selectedAction;
-    public OptimizerAction? SelectedAction
+    public List<InspectorAction> Actions { get; set; } = actions;
+    private InspectorAction? _selectedAction = selectedAction;
+    public InspectorAction? SelectedAction
     {
         get => _selectedAction;
         set
@@ -32,7 +32,7 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
         }
     }
 
-    public string OptimizerName { get; set; } = optimizerName;
+    public string InspectorName { get; set; } = inspectorName;
     public string MainMessage
     {
         get
@@ -53,9 +53,9 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
             string path = GetPathMessage(modDirectory);
             if (Label != null && Label != "")
             {
-                return path + "\n" + OptimizerName;
+                return path + "\n" + InspectorName;
             }
-            return OptimizerName;
+            return InspectorName;
         }
     }
 
@@ -69,30 +69,30 @@ public class OptimizerResultRow(string label, string filePath, string optimizerN
     }
 }
 
-public class OptimizerResultGroup(List<OptimizerResultRow> optimizerResults, string groupMessage, List<OptimizerAction> actions, OptimizerAction? selectedAction, List<string> optimizerNames)
+public class InspectorResultGroup(List<InspectorResultRow> inspectorResults, string groupMessage, List<InspectorAction> actions, InspectorAction? selectedAction, List<string> inspectorNames)
 {
-    public List<OptimizerResultRow> OptimizerResults { get; set; } = optimizerResults;
+    public List<InspectorResultRow> InspectorResults { get; set; } = inspectorResults;
     public string GroupMessage { get; set; } = groupMessage;
-    public List<string> OptimizerNames { get; set; } = optimizerNames;
+    public List<string> InspectorNames { get; set; } = inspectorNames;
     public string GrayMessage
     {
         get
         {
-            return OptimizerResults.Count + " result(s). " + String.Join(", ", OptimizerNames);
+            return InspectorResults.Count + " result(s). " + String.Join(", ", InspectorNames);
         }
     }
-    public List<OptimizerAction> Actions { get; set; } = actions;
-    private OptimizerAction? _selectedAction = selectedAction;
-    public OptimizerAction? SelectedAction
+    public List<InspectorAction> Actions { get; set; } = actions;
+    private InspectorAction? _selectedAction = selectedAction;
+    public InspectorAction? SelectedAction
     {
         get => _selectedAction;
         set
         {
             _selectedAction = value;
             // Update all results in group with selected action if it has that action
-            foreach (OptimizerResultRow row in OptimizerResults)
+            foreach (InspectorResultRow row in InspectorResults)
             {
-                foreach (OptimizerAction action in row.Actions)
+                foreach (InspectorAction action in row.Actions)
                 {
                     if (value == null || action.CallbackName.Equals(value.CallbackName))
                     {
@@ -116,7 +116,7 @@ public sealed class LoadingState(String label) : RightPaneState
 
 public sealed class ResultsState : RightPaneState
 {
-    public ObservableCollection<OptimizerResultGroup> ResultList { get; } = new();
+    public ObservableCollection<InspectorResultGroup> ResultList { get; } = new();
 }
 
 public sealed class NoneFoundState : RightPaneState { }
@@ -136,10 +136,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         InitializeComponent();
         DataContext = this;
-        foreach (Optimizer? optimizer in AllOptimizers.Items)
+        foreach (Inspector? inspector in AllInspectors.Items)
         {
-            if (optimizer != null)
-                OptimizerList.Items.Add(optimizer);
+            if (inspector != null)
+                InspectorList.Items.Add(inspector);
         }
         MainSettings.Instance.PropertyChanged += (s, e) =>
         {
@@ -222,7 +222,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async Task StartScan()
     {
-        var allOptimizers = OptimizerList.Items.Cast<Optimizer>().ToList();
+        var allInspectors = InspectorList.Items.Cast<Inspector>().ToList();
         string targetDirectory = MainSettings.Instance.ModDirectory;
         RightPaneContent = new LoadingState("Scanning...");
 
@@ -230,26 +230,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             List<Result> tempResults = new();
 
-            List<Optimizer> optimizers = new List<Optimizer>();
-            foreach (Optimizer optimizer in allOptimizers)
+            List<Inspector> inspectors = new List<Inspector>();
+            foreach (Inspector inspector in allInspectors)
             {
-                if (!optimizer.IsActive)
+                if (!inspector.IsActive)
                 {
                     continue;
                 }
-                var optimizerResults = optimizer.SettingsCheck();
-                if (optimizerResults.Count == 0)
-                    optimizers.Add(optimizer);
+                var inspectorResults = inspector.SettingsCheck();
+                if (inspectorResults.Count == 0)
+                    inspectors.Add(inspector);
                 else
-                    tempResults.AddRange(optimizerResults);
+                    tempResults.AddRange(inspectorResults);
             }
 
-            if (Directory.Exists(targetDirectory) && optimizers.Count > 0)
+            if (Directory.Exists(targetDirectory) && inspectors.Count > 0)
             {
                 var files = Directory.EnumerateFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
                 foreach (String file in files)
                 {
-                    tempResults.AddRange(ScanFile(file, optimizers));
+                    tempResults.AddRange(ScanFile(file, inspectors));
                 }
             }
 
@@ -268,20 +268,20 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             : new NoneFoundState();
     }
 
-    private List<Result> ScanFile(string file, List<Optimizer> optimizers)
+    private List<Result> ScanFile(string file, List<Inspector> inspectors)
     {
         List<Result> tempResults = new();
-        foreach (Optimizer? optimizer in optimizers)
+        foreach (Inspector? inspector in inspectors)
         {
-            if (optimizer != null && optimizer.DoCheck(file))
+            if (inspector != null && inspector.DoCheck(file))
             {
                 try
                 {
-                    tempResults.AddRange(optimizer.Check(file));
+                    tempResults.AddRange(inspector.Check(file));
                 }
                 catch (Exception e)
                 {
-                    Util.AddException(ref tempResults, e, file, optimizer.OptimizerName, () => { return optimizer.Check(file); });
+                    Util.AddException(ref tempResults, e, file, inspector.InspectorName, () => { return inspector.Check(file); });
                 }
             }
         }
@@ -307,7 +307,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             List<Result> tempResults = new();
             foreach (var group in resultsState.ResultList)
             {
-                foreach (var result in group.OptimizerResults)
+                foreach (var result in group.InspectorResults)
                 {
                     if (result == null || result.SelectedAction == null)
                         continue;
@@ -318,7 +318,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     }
                     catch (Exception e)
                     {
-                        Util.AddException(ref tempResults, e, result.FilePath, result.OptimizerName, result.SelectedAction.Callback);
+                        Util.AddException(ref tempResults, e, result.FilePath, result.InspectorName, result.SelectedAction.Callback);
                     }
                 }
 
@@ -330,15 +330,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         newResults.AddRange(await Task.Run(() =>
         {
             List<Result> tempResults = new();
-            foreach (var optimizer in AllOptimizers.Items)
+            foreach (var inspector in AllInspectors.Items)
             {
                 try
                 {
-                    tempResults.AddRange(optimizer.RunAfter());
+                    tempResults.AddRange(inspector.RunAfter());
                 }
                 catch (Exception e)
                 {
-                    Util.AddException(ref tempResults, e, "All files", optimizer.OptimizerName, () => { return optimizer.RunAfter(); });
+                    Util.AddException(ref tempResults, e, "All files", inspector.InspectorName, () => { return inspector.RunAfter(); });
                 }
             }
             return tempResults;
@@ -391,14 +391,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    private async void OptimizerSettingsEvent(object? sender, RoutedEventArgs args)
+    private async void InspectorSettingsEvent(object? sender, RoutedEventArgs args)
     {
         var button = (Button?)sender;
-        var optimizer = (Optimizer?)button?.DataContext!;
-        if (optimizer == null)
+        var inspector = (Inspector?)button?.DataContext!;
+        if (inspector == null)
             return;
 
-        var x = new OptimizerSettingsWindow(optimizer);
+        var x = new InspectorSettingsWindow(inspector);
         await x.ShowDialog(this);
 
     }
@@ -423,7 +423,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public void SetAllEnabled(bool isEnabled)
     {
-        OptimizerList.IsEnabled = isEnabled;
+        InspectorList.IsEnabled = isEnabled;
         SettingsTab.IsEnabled = isEnabled;
         StartScanButton.IsEnabled = isEnabled;
     }

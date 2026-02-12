@@ -5,9 +5,9 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
-    public class CleanupOptimizer : Optimizer
+    public class CleanupOptimizer : Inspector
     {
         public CleanupOptimizer() : base("Cleanup Optimizer")
         {
@@ -17,11 +17,11 @@ namespace GalaxEyes.Optimizers
         public override List<Result> Check(String filePath)
         {
             List<Result> resultList = new List<Result>();
-            List<OptimizerAction> actions = new() {
-                new OptimizerAction(() => { return RemoveFile(filePath); }, "Remove file"),
-                new OptimizerAction(Util.NULL_ACTION, "Ignore this once")
+            List<InspectorAction> actions = new() {
+                new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file"),
+                new InspectorAction(Util.NULL_ACTION, "Ignore this once")
             };
-            resultList.Add(new Result(ResultType.Optimize, filePath, "Temporary files detected.", OptimizerName, actions));
+            resultList.Add(new Result(ResultType.Optimize, filePath, "Temporary files detected.", InspectorName, actions));
 
             return resultList;
         }

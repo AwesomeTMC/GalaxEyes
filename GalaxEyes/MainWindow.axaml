@@ -2,7 +2,7 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:optimizers="using:GalaxEyes.Optimizers"
+		xmlns:inspectors="using:GalaxEyes.Inspectors"
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="GalaxEyes.MainWindow"
 		xmlns:local="clr-namespace:GalaxEyes"
@@ -10,7 +10,7 @@
 		x:Name="Root"
 		Title="GalaxEyes">
 	<Window.Resources>
-		<DataTemplate DataType="local:OptimizerResultGroup" x:DataType="local:OptimizerResultGroup" x:Key="OptimizerResultGroup">
+		<DataTemplate DataType="local:InspectorResultGroup" x:DataType="local:InspectorResultGroup" x:Key="InspectorResultGroup">
 			<Grid Margin="4" ColumnDefinitions="*">
 				<Expander Grid.Column="0" HorizontalAlignment="Stretch" Margin="0, 0, 16, 0">
 					<Expander.Header>
@@ -27,13 +27,13 @@
 							</ComboBox>
 						</Grid>
 					</Expander.Header>
-					<ItemsRepeater ItemsSource="{Binding OptimizerResults}"
-								   ItemTemplate="{StaticResource OptimizerResultRow}"/>
+					<ItemsRepeater ItemsSource="{Binding InspectorResults}"
+								   ItemTemplate="{StaticResource InspectorResultRow}"/>
 				</Expander>
 			</Grid>
 		</DataTemplate>
 
-		<DataTemplate DataType="local:OptimizerResultRow" x:DataType="local:OptimizerResultRow" x:Key="OptimizerResultRow">
+		<DataTemplate DataType="local:InspectorResultRow" x:DataType="local:InspectorResultRow" x:Key="InspectorResultRow">
 			<Grid Margin="4" ColumnDefinitions="*, Auto">
 				<StackPanel Grid.Column="0" Margin="8,0">
 					<TextBlock x:Name="LabelTextBlock" VerticalAlignment="Center"
@@ -78,7 +78,7 @@
 				</Grid.RowDefinitions>
 				<ScrollViewer Grid.Row="0">
 					<ItemsRepeater ItemsSource="{Binding ResultList}"
-								   ItemTemplate="{StaticResource OptimizerResultGroup}"/>
+								   ItemTemplate="{StaticResource InspectorResultGroup}"/>
 				</ScrollViewer>
 				<Button Grid.Row="1"
 						FontSize="24"
@@ -151,14 +151,14 @@
 
 						<!-- Header -->
 						<StackPanel Grid.Row="0" Spacing="6">
-							<TextBlock Text="Optimizers" FontSize="24"/>
+							<TextBlock Text="Inspectors" FontSize="24"/>
 						</StackPanel>
 
-						<!-- Optimizers -->
+						<!-- Inspectors -->
 						<ScrollViewer Grid.Row="1" >
-							<ItemsControl x:Name="OptimizerList" Padding="10">
+							<ItemsControl x:Name="InspectorList" Padding="10">
 								<ItemsControl.ItemTemplate>
-									<DataTemplate x:DataType="optimizers:Optimizer">
+									<DataTemplate x:DataType="inspectors:Inspector">
 										<Grid Margin="4">
 											<Grid.ColumnDefinitions>
 												<ColumnDefinition Width="Auto"/>
@@ -172,12 +172,12 @@
 											<TextBlock Grid.Column="1"
 													   Margin="8,0"
 													   VerticalAlignment="Center"
-													   Text="{Binding OptimizerName}"/>
+													   Text="{Binding InspectorName}"/>
 
 											<Button Grid.Column="2"
 													Content="Settings"
 													Height="24"
-													Padding="3" Click="OptimizerSettingsEvent"
+													Padding="3" Click="InspectorSettingsEvent"
 													VerticalAlignment="Center"
 													IsVisible="{Binding HasSettings}"/>
 										</Grid>

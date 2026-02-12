@@ -1,5 +1,5 @@
 ﻿using Binary_Stream;
-using GalaxEyes.Optimizers;
+using GalaxEyes.Inspectors;
 using Hack.io.KCL;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
@@ -19,39 +19,39 @@ public static class Util
 {
     public static Func<List<Result>> NULL_ACTION = () => { return new(); };
 
-    public static void AddException(ref List<Result> results, Exception e, string affectedFile, string optimizerName, Func<List<Result>> retryCallback)
+    public static void AddException(ref List<Result> results, Exception e, string affectedFile, string inspectorName, Func<List<Result>> retryCallback)
     {
-        AddError(ref results, affectedFile, e.GetType().ToString(), optimizerName, retryCallback, e.ToString());
+        AddError(ref results, affectedFile, e.GetType().ToString(), inspectorName, retryCallback, e.ToString());
     }
 
-    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string optimizerName, Func<List<Result>>? retryCallback, string resultSpecificMessage="")
+    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, Func<List<Result>>? retryCallback, string resultSpecificMessage="")
     {
 
-        List<OptimizerAction> standardActions = new();
+        List<InspectorAction> standardActions = new();
         if (retryCallback != null)
-            standardActions.Add(new OptimizerAction(retryCallback, "Retry"));
-        standardActions.Add(new OptimizerAction(NULL_ACTION, "Ignore this once"));
+            standardActions.Add(new InspectorAction(retryCallback, "Retry"));
+        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
-        results.Add(new Result(ResultType.Error, affectedFile, groupMessage, optimizerName, standardActions, resultSpecificMessage));
+        results.Add(new Result(ResultType.Error, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage));
     }
 
-    public static void AddResult(ObservableCollection<OptimizerResultGroup> groups, Result result, OptimizerAction? selectedAction)
+    public static void AddResult(ObservableCollection<InspectorResultGroup> groups, Result result, InspectorAction? selectedAction)
     {
-        var resultRow = new OptimizerResultRow(result.Message, result.AffectedFile, result.OptimizerName, result.Callbacks, selectedAction);
-        foreach (OptimizerResultGroup group in groups)
+        var resultRow = new InspectorResultRow(result.Message, result.AffectedFile, result.InspectorName, result.Callbacks, selectedAction);
+        foreach (InspectorResultGroup group in groups)
         {
             if (group.GroupMessage == result.GroupMessage)
             {
-                group.OptimizerResults.Add(resultRow);
-                if (!group.OptimizerNames.Contains(result.OptimizerName))
-                    group.OptimizerNames.Add(result.OptimizerName);
+                group.InspectorResults.Add(resultRow);
+                if (!group.InspectorNames.Contains(result.InspectorName))
+                    group.InspectorNames.Add(result.InspectorName);
                 return;
             }
         }
 
-        List<OptimizerResultRow> rows = new() { resultRow };
-        List<string> names = new() { result.OptimizerName };
-        var newGroup = new OptimizerResultGroup(rows, result.GroupMessage, result.Callbacks, selectedAction, names);
+        List<InspectorResultRow> rows = new() { resultRow };
+        List<string> names = new() { result.InspectorName };
+        var newGroup = new InspectorResultGroup(rows, result.GroupMessage, result.Callbacks, selectedAction, names);
         groups.Add(newGroup);
     }
 
@@ -89,7 +89,7 @@ public static class Util
         return true;
     }
 
-    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string optimizerName, Func<List<Result>> retryCallback)
+    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<List<Result>> retryCallback)
     {
         List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
         [
@@ -106,12 +106,12 @@ public static class Util
         }
         catch (BadImageFormatException e)
         {
-            Util.AddError(ref results, arcPath, "Bad magic for RARC", optimizerName, retryCallback, e.ToString());
+            Util.AddError(ref results, arcPath, "Bad magic for RARC", inspectorName, retryCallback, e.ToString());
             return null;
         }
     }
 
-    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string optimizerName, JKRArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, JKRArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
     {
         try
         {
@@ -123,7 +123,7 @@ public static class Util
         }
         catch (Exception e)
         {
-            Util.AddError(ref results, arcPath, "Failed to save archive", optimizerName, retryCallback, e.ToString());
+            Util.AddError(ref results, arcPath, "Failed to save archive", inspectorName, retryCallback, e.ToString());
             return false;
         }
     }

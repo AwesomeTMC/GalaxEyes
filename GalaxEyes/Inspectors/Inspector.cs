@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GalaxEyes.Optimizers
+namespace GalaxEyes.Inspectors
 {
-    public static class AllOptimizers
+    public static class AllInspectors
     {
-        public static List<Optimizer> Items = new()
+        public static List<Inspector> Items = new()
         {
 #if DEBUG
             new ExampleOptimizer(),
@@ -30,30 +30,30 @@ namespace GalaxEyes.Optimizers
         Error
     }
 
-    public class OptimizerAction(Func<List<Result>> callback, String callbackName)
+    public class InspectorAction(Func<List<Result>> callback, String callbackName)
     {
         public Func<List<Result>> Callback = callback;
         public String CallbackName = callbackName;
         public override String ToString() => this.CallbackName;
     }
 
-    public class Result(ResultType type, string affectedFile, string groupMessage, string optimizerName, List<OptimizerAction>? callbacks = null, string resultSpecificMessage = "")
+    public class Result(ResultType type, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? callbacks = null, string resultSpecificMessage = "")
     {
-        public List<OptimizerAction> Callbacks { get; set; } = callbacks ?? new();
+        public List<InspectorAction> Callbacks { get; set; } = callbacks ?? new();
         public ResultType Type { get; set; } = type;
         public string Message { get; set; } = resultSpecificMessage;
         public string AffectedFile { get; set; } = affectedFile;
         public string GroupMessage { get; set; } = groupMessage;
-        public string OptimizerName { get; set; } = optimizerName;
+        public string InspectorName { get; set; } = inspectorName;
     }
-    public abstract class Optimizer(String name)
+    public abstract class Inspector(String name)
     {
         /// <summary>
-        /// The name of the optimizer. This will be displayed to the user.
+        /// The name of the inspector. This will be displayed to the user.
         /// </summary>
-        public String OptimizerName { get; set; } = name;
+        public String InspectorName { get; set; } = name;
         /// <summary>
-        /// Whether or not the optimizer is active.
+        /// Whether or not the inspector is active.
         /// Part of <see cref="DoCheck(string)"/>.
         /// </summary>
         public Boolean IsActive { get; set; } = true;
@@ -64,13 +64,13 @@ namespace GalaxEyes.Optimizers
         /// <returns></returns>
         public abstract List<Result> Check(String file);
         /// <summary>
-        /// Associated settings for the optimizer.
+        /// Associated settings for the inspector.
         /// See <see cref="ExampleOptimizer"/> for how to override this.
         /// If set to null, the Settings button will not appear.
         /// </summary>
         public abstract IHaveSettings? Settings { get; }
         /// <summary>
-        /// Runs after every <see cref="OptimizerAction"/> is called. It is not necessarily after a success.
+        /// Runs after every <see cref="InspectorAction"/> is called. It is not necessarily after a success.
         /// </summary>
         /// <returns></returns>
         public virtual List<Result> RunAfter()
@@ -78,7 +78,7 @@ namespace GalaxEyes.Optimizers
             return new();
         }
         /// <summary>
-        /// Checks if the current optimizer should run <see cref="Check(string)"/> on the <paramref name="filePath"/> given.
+        /// Checks if the current inspector should run <see cref="Check(string)"/> on the <paramref name="filePath"/> given.
         /// </summary>
         /// <param name="filePath">The absolute path of the file</param>
         /// <returns></returns>
@@ -87,7 +87,7 @@ namespace GalaxEyes.Optimizers
             return IsActive;
         }
         /// <summary>
-        /// Used by UI to check if this optimizer's settings are null or not.
+        /// Used by UI to check if this inspector's settings are null or not.
         /// </summary>
         public bool HasSettings { get
             {
@@ -95,7 +95,7 @@ namespace GalaxEyes.Optimizers
             } 
         }
         /// <summary>
-        /// Checks if the current optimizer has any invalid/unset settings. Independent of any specific file, and run once before <see cref="DoCheck(string)"/>.
+        /// Checks if the current inspector has any invalid/unset settings. Independent of any specific file, and run once before <see cref="DoCheck(string)"/>.
         /// </summary>
         /// <returns>A list of any error messages. Returns an empty list if there are no errors.</returns>
         public virtual List<Result> SettingsCheck()
