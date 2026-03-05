@@ -63,10 +63,10 @@ namespace GalaxEyes.Inspectors
             return new();
         }
 
-        public override List<Result> RunAfter()
+        public override Task<List<Result>> RunAfter()
         {
             Util.RemoveEmptyFolders(MainSettings.Instance.ModDirectory);
-            return new();
+            return Task.FromResult(new List<Result>());
         }
 
         public override List<Result> SettingsCheck()
@@ -75,7 +75,7 @@ namespace GalaxEyes.Inspectors
             if (!Util.IsValidVanillaDirectory(Settings.VanillaDirectory))
             {
                 string error = "Valid vanilla directory not set.";
-                Util.AddError(ref results, "*", error, InspectorName, null);
+                Util.AddError(ref results, "*", error, InspectorName, Util.NULL_ACTION);
             }
             return results;
         }

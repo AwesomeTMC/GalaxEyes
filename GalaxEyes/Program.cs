@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using GalaxEyes;
 using System;
 
 namespace GalaxEyes;

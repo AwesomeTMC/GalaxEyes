@@ -4,3 +4,6 @@
 [submodule "jkr_tool"]
 	path = jkr_tool
 	url = https://github.com/Lord-G-INC/jkr_tool.git
+[submodule "NinTextures"]
+	path = NinTextures
+	url = https://github.com/AwesomeTMC/NinTextures.git

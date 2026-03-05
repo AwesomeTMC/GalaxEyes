@@ -39,7 +39,6 @@ namespace GalaxEyes.Inspectors
             
 
             var objectName = Path.GetFileName(filePath).Replace(".arc", "");
-            //Debug.WriteLine(objectName);
             bool hasKcl = arc.FindFile(objectName + ".kcl").Count() > 0;
             bool hasPa = arc.FindFile(objectName + ".pa").Count() > 0;
             if (!hasKcl || !hasPa)
@@ -152,7 +151,6 @@ namespace GalaxEyes.Inspectors
                 
                 uniqueEntries.Add(entry);
             }
-            //Debug.WriteLine("Duplicate count " + dupeCount);
             return dupeCount;
         }
 

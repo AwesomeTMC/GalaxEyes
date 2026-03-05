@@ -64,7 +64,7 @@ namespace GalaxEyes.Inspectors
                 Util.AddError(ref results,
                     "*",
                     "Example optimizer ran into an error",
-                    InspectorName, null,
+                    InspectorName, Util.NULL_ACTION,
                     "Hi it's me, the independent error.");
             }
             return results;

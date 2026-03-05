@@ -20,6 +20,7 @@ namespace GalaxEyes.Inspectors
             new Yaz0Optimizer(),
             new KCLOptimizer(),
             new CleanupOptimizer(),
+            new TextureInspector(),
         };
     }
 
@@ -30,11 +31,22 @@ namespace GalaxEyes.Inspectors
         Error
     }
 
-    public class InspectorAction(Func<List<Result>> callback, String callbackName)
+    public class InspectorAction
     {
-        public Func<List<Result>> Callback = callback;
-        public String CallbackName = callbackName;
+        public Func<Task<List<Result>>> Callback;
+        public String CallbackName;
         public override String ToString() => this.CallbackName;
+        public InspectorAction(Func<Task<List<Result>>> callback, String callbackName)
+        {
+            Callback = callback;
+            CallbackName = callbackName;
+        }
+
+        public InspectorAction(Func<List<Result>> callback, String callbackName)
+        {
+            Callback = () => { return Task.FromResult(callback()); };
+            CallbackName = callbackName;
+        }
     }
 
     public class Result(ResultType type, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? callbacks = null, string resultSpecificMessage = "")
@@ -73,9 +85,9 @@ namespace GalaxEyes.Inspectors
         /// Runs after every <see cref="InspectorAction"/> is called. It is not necessarily after a success.
         /// </summary>
         /// <returns></returns>
-        public virtual List<Result> RunAfter()
+        public virtual Task<List<Result>> RunAfter()
         {
-            return new();
+            return Task.FromResult(new List<Result>());
         }
         /// <summary>
         /// Checks if the current inspector should run <see cref="Check(string)"/> on the <paramref name="filePath"/> given.

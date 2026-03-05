@@ -40,10 +40,11 @@
     <ProjectReference Include="..\hackio\Hack.io.YAZ0\Hack.io.YAZ0.csproj" />
     <ProjectReference Include="..\hackio\Hack.io\Hack.io.csproj" />
     <ProjectReference Include="..\jkr_tool\jkr_lib\jkr_lib.csproj" />
+    <ProjectReference Include="..\NinTextures\NinTextures\NinTextures.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="InspectorSettingsWindow.axaml.cs">
+    <Compile Update="Windows\InspectorSettingsWindow.axaml.cs">
       <DependentUpon>InspectorSettingsWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>

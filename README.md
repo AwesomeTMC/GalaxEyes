@@ -21,6 +21,9 @@ Powered by the [Hack.io Libraries](https://github.com/SuperHackio/Hack.io) by Su
 
 [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm/) and [System.Text.Json](https://www.nuget.org/packages/System.Text.Json) by Microsoft.
 
+[ImageSharp](https://github.com/SixLabors/ImageSharp) by SixLabors.
+
+[NinTextures](https://github.com/AwesomeTMC/NinTextures) by AwesomeTMC.
 
 See [THIRD_PARTY_LICENSES](/THIRD_PARTY_LICENSES) for their specific licenses.
 

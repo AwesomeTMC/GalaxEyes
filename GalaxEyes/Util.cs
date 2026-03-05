@@ -1,9 +1,13 @@
-﻿using Binary_Stream;
+﻿using Avalonia.Media.Imaging;
+using Binary_Stream;
 using GalaxEyes.Inspectors;
 using Hack.io.KCL;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
 using jkr_lib;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,14 +21,35 @@ namespace GalaxEyes;
 
 public static class Util
 {
-    public static Func<List<Result>> NULL_ACTION = () => { return new(); };
+    public static Func<Task<List<Result>>> NULL_ACTION = async () => { return new(); };
+
+    public static Func<Task<List<Result>>> FromResult(Func<List<Result>> func)
+    {
+        return () => { return Task.FromResult(func()); };
+    }
+
+    public static void AddException(ref List<Result> results, Exception e, string affectedFile, string inspectorName, Func<Task<List<Result>>> retryCallback)
+    {
+        AddError(ref results, affectedFile, e.GetType().ToString(), inspectorName, retryCallback, e.ToString());
+    }
 
     public static void AddException(ref List<Result> results, Exception e, string affectedFile, string inspectorName, Func<List<Result>> retryCallback)
     {
         AddError(ref results, affectedFile, e.GetType().ToString(), inspectorName, retryCallback, e.ToString());
     }
 
-    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, Func<List<Result>>? retryCallback, string resultSpecificMessage="")
+    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, Func<Task<List<Result>>>? retryCallback, string resultSpecificMessage="")
+    {
+
+        List<InspectorAction> standardActions = new();
+        if (retryCallback != null)
+            standardActions.Add(new InspectorAction(retryCallback, "Retry"));
+        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
+
+        results.Add(new Result(ResultType.Error, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage));
+    }
+
+    public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, Func<List<Result>>? retryCallback, string resultSpecificMessage = "")
     {
 
         List<InspectorAction> standardActions = new();
@@ -63,7 +88,7 @@ public static class Util
             if (Directory.GetFiles(directory).Length == 0
                 && Directory.GetDirectories(directory).Length == 0)
             {
-                Debug.WriteLine("Delete directory " + directory);
+                Debug.WriteLine("Deleting empty directory " + directory);
                 Directory.Delete(directory, false);
             }
         }
@@ -91,6 +116,11 @@ public static class Util
 
     public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<List<Result>> retryCallback)
     {
+        return TryLoadArchive(ref results, arcPath, inspectorName, Util.FromResult(retryCallback));
+    }
+
+    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<Task<List<Result>>> retryCallback)
+    {
         List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
         [
             (YAZ0.Check, YAZ0.Decompress)
@@ -112,6 +142,11 @@ public static class Util
     }
 
     public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, JKRArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
+    {
+        return TrySaveArchive(ref results, arcPath, inspectorName, arc, Util.FromResult(retryCallback), strength);
+    }
+
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, JKRArchive arc, Func<Task<List<Result>>> retryCallback, uint strength = 0x1000)
     {
         try
         {
@@ -138,14 +173,23 @@ public static class Util
         return result;
     }
 
-    public static MemoryStream? TryLoadFileFromArc(JKRArchive arc, string filePath)
+    public static BinaryStream? TryLoadFileFromArc(JKRArchive arc, string filePath)
     {
         var iter = arc.FindFile(filePath);
         if (iter.Count() == 0)
             return null;
         var file = iter.First<JKRFileNode>();
-        var strm = new MemoryStream(file.Data);
+        var strm = new BinaryStream(file.Data);
         return strm;
+    }
+
+    public static JKRFileNode? TryLoadFileNodeFromArc(JKRArchive arc, string filePath)
+    {
+        var iter = arc.FindFile(filePath);
+        if (iter.Count() == 0)
+            return null;
+        var file = iter.First<JKRFileNode>();
+        return file;
     }
 
     /// <summary>
@@ -158,5 +202,13 @@ public static class Util
         var tmpPath = path + ".tmp";
         File.WriteAllBytes(tmpPath, bytes);
         File.Move(tmpPath, path, true);
+    }
+
+    public static Bitmap ToAvaloniaBitmap(Image<Rgba32> image)
+    {
+        using var ms = new MemoryStream();
+        image.Save(ms, new PngEncoder());
+        ms.Position = 0;
+        return new Bitmap(ms);
     }
 }

@@ -302,7 +302,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         RightPaneContent = new LoadingState("Resolving...");
 
-        List<Result> newResults = await Task.Run(() =>
+        List<Result> newResults = await Task.Run(async () =>
         {
             List<Result> tempResults = new();
             foreach (var group in resultsState.ResultList)
@@ -314,7 +314,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
                     try
                     {
-                        tempResults.AddRange(result.SelectedAction.Callback());
+                        tempResults.AddRange(await result.SelectedAction.Callback());
                     }
                     catch (Exception e)
                     {
@@ -327,14 +327,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return tempResults;
         });
 
-        newResults.AddRange(await Task.Run(() =>
+        newResults.AddRange(await Task.Run(async () =>
         {
             List<Result> tempResults = new();
             foreach (var inspector in AllInspectors.Items)
             {
                 try
                 {
-                    tempResults.AddRange(inspector.RunAfter());
+                    tempResults.AddRange(await inspector.RunAfter());
                 }
                 catch (Exception e)
                 {

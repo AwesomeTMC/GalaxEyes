@@ -1,5 +1,12 @@
 <Solution>
-  <Project Path="AST/jatast.csproj" />
+  <Project Path="AST/jatast.csproj">
+    <BuildDependency Project="Hack.IO.KCL/Hack.io.KCL.csproj" />
+    <BuildDependency Project="hackio/Hack.io.BCSV/Hack.io.BCSV.csproj" />
+    <BuildDependency Project="hackio/Hack.io.YAZ0/Hack.io.YAZ0.csproj" />
+    <BuildDependency Project="hackio/Hack.io/Hack.io.csproj" />
+    <BuildDependency Project="jkr_tool/jkr_lib/jkr_lib.csproj" />
+    <BuildDependency Project="NinTextures/NinTextures/NinTextures.csproj" />
+  </Project>
   <Project Path="GalaxEyes/GalaxEyes.csproj">
     <BuildDependency Project="AST/jatast.csproj" />
   </Project>
@@ -7,6 +14,7 @@
   <Project Path="hackio/Hack.io.BCSV/Hack.io.BCSV.csproj" />
   <Project Path="hackio/Hack.io.YAZ0/Hack.io.YAZ0.csproj" />
   <Project Path="hackio/Hack.io/Hack.io.csproj" />
-  <Project Path="jkr_tool/binary_stream/BinaryStream/BinaryStream.csproj" />
   <Project Path="jkr_tool/jkr_lib/jkr_lib.csproj" />
+  <Project Path="NinTextures/binary_stream/BinaryStream/BinaryStream.csproj" />
+  <Project Path="NinTextures/NinTextures/NinTextures.csproj" />
 </Solution>

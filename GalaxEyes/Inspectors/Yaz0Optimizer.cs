@@ -84,7 +84,7 @@ namespace GalaxEyes.Inspectors
             List<Result> results = new();
             if (Settings.Strength > 0x1000 || Settings.Strength < 0)
             {
-                Util.AddError(ref results, "*", "YAZ0 Strength not in valid range (0 through 4096).", InspectorName, null);
+                Util.AddError(ref results, "*", "YAZ0 Strength not in valid range (0 through 4096).", InspectorName, Util.NULL_ACTION);
             }
             return results;
         }
