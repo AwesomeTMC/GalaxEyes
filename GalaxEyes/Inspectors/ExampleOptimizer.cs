@@ -7,13 +7,19 @@ using System.Threading;
 
 namespace GalaxEyes.Inspectors
 {
-    public partial class ExampleSettings : FileSettings<ExampleSettings>
+    public partial class ExampleSettings : InspectorSettings<ExampleSettings>
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
         [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
         [ObservableProperty] [property: Name("Cause independent error intentionally?")] private bool _causeIndependentError = false;
         [ObservableProperty] private int _sleepAmount = 0;
+
+        // You can add this to make your Inspector disabled by default.
+        protected override void InitializeNew()
+        {
+            IsEnabled = false;
+        }
     }
     public class ExampleOptimizer : Inspector
     {

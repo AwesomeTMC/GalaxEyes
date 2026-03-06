@@ -7,12 +7,16 @@ using System.Threading;
 
 namespace GalaxEyes.Inspectors
 {
+    public class CleanupSettings : InspectorSettings<CleanupSettings>
+    {
+        [JsonIgnore] public override string FileName => "cleanup_settings.json";
+    }
     public class CleanupOptimizer : Inspector
     {
         public CleanupOptimizer() : base("Cleanup Optimizer")
         {
         }
-        public override IHaveSettings? Settings { get; } = null;
+        public override CleanupSettings Settings { get; } = CleanupSettings.Load();
 
         public override List<Result> Check(String filePath)
         {

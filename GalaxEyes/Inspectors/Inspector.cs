@@ -65,11 +65,6 @@ namespace GalaxEyes.Inspectors
         /// </summary>
         public String InspectorName { get; set; } = name;
         /// <summary>
-        /// Whether or not the inspector is active.
-        /// Part of <see cref="DoCheck(string)"/>.
-        /// </summary>
-        public Boolean IsActive { get; set; } = true;
-        /// <summary>
         /// Runs a check on <paramref name="file"/>. 
         /// </summary>
         /// <param name="file"></param>
@@ -78,9 +73,9 @@ namespace GalaxEyes.Inspectors
         /// <summary>
         /// Associated settings for the inspector.
         /// See <see cref="ExampleOptimizer"/> for how to override this.
-        /// If set to null, the Settings button will not appear.
+        /// If there are no settings, the settings button will not be shown.
         /// </summary>
-        public abstract IHaveSettings? Settings { get; }
+        public abstract IHaveInspectorSettings Settings { get; }
         /// <summary>
         /// Runs after every <see cref="InspectorAction"/> is called. It is not necessarily after a success.
         /// </summary>
@@ -96,14 +91,14 @@ namespace GalaxEyes.Inspectors
         /// <returns></returns>
         public virtual bool DoCheck(string filePath)
         {
-            return IsActive;
+            return Settings.IsEnabled;
         }
         /// <summary>
-        /// Used by UI to check if this inspector's settings are null or not.
+        /// Used by UI to check if this inspector should show the "Settings" button.
         /// </summary>
         public bool HasSettings { get
             {
-                return Settings != null;
+                return Settings.GetEditableEntries().Count > 0;
             } 
         }
         /// <summary>

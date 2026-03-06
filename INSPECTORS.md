@@ -6,26 +6,26 @@ Each inspector can have their own settings. They are defined at the top of your 
 ```c#
 namespace GalaxEyes.Inspectors
 {
-    public partial class ExampleSettings : FileSettings<ExampleSettings>
+    public partial class ExampleSettings : InspectorSettings<ExampleSettings>
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
         [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
-        [ObservableProperty] [property: Name("Cause independent error intentionally?")] private bool _causeIndependentError = false;
+        [ObservableProperty] [property: Name("Cause independent error intentionally?")] 
+        private bool _causeIndependentError = false;
         [ObservableProperty] private int _sleepAmount = 0;
+
+        // You can add this to make your Inspector disabled by default.
+        protected override void InitializeNew()
+        {
+            IsEnabled = false;
+        }
     }
     ...
 }
 ```
 
-They can have no settings too. This will remove the settings button from the UI.
-
-```c#
-public YourInspector() : base("Your Inspector")
-{
-}
-public override IHaveSettings? Settings { get; } = null;
-```
+If they have no settings (other than IsEnabled), the settings button will automatically be hidden.
 
 All inspector settings will have their UI and JSON automatically generated for convenience. As long as the settings are loaded in the optimizer's class itself:
 
@@ -109,7 +109,7 @@ public override List<Result> SettingsCheck()
         Util.AddError(ref results,
             "*",
             "Example optimizer ran into an error",
-            InspectorName, null,
+            InspectorName, Util.NULL_ACTION,
             "Hi it's me, the independent error.");
     }
     return results;

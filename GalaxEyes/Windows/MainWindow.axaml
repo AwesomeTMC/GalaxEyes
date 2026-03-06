@@ -166,7 +166,7 @@
 												<ColumnDefinition Width="Auto"/>
 											</Grid.ColumnDefinitions>
 
-											<CheckBox Grid.Column="0" IsChecked="{Binding IsActive}"
+											<CheckBox Grid.Column="0" IsChecked="{Binding Settings.IsEnabled}"
 													  VerticalAlignment="Center"/>
 
 											<TextBlock Grid.Column="1"

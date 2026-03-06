@@ -133,13 +133,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 {
     public MainWindow()
     {
-
         InitializeComponent();
         DataContext = this;
         foreach (Inspector? inspector in AllInspectors.Items)
         {
-            if (inspector != null)
-                InspectorList.Items.Add(inspector);
+            if (inspector == null)
+                continue;
+            InspectorList.Items.Add(inspector);
         }
         MainSettings.Instance.PropertyChanged += (s, e) =>
         {
@@ -233,7 +233,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             List<Inspector> inspectors = new List<Inspector>();
             foreach (Inspector inspector in allInspectors)
             {
-                if (!inspector.IsActive)
+                if (!inspector.Settings.IsEnabled)
                 {
                     continue;
                 }

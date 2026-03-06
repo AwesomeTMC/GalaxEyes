@@ -23,7 +23,9 @@ namespace GalaxEyes.Inspectors
 {
     public class ImageInformation
     {
+
         public bool HasTransparent = false;
+        public bool HasTransparentRange = false;
         public bool IsGrayscale = true;
         public bool IsI4Grayscale = true;
         public bool IsA4 = true;
@@ -51,11 +53,20 @@ namespace GalaxEyes.Inspectors
             return ret;
         }
     }
-    public partial class TextureSettings : FileSettings<TextureSettings>
+    public partial class TextureSettings : InspectorSettings<TextureSettings>
     {
         [JsonIgnore] public override string FileName => "bti_settings.json";
 
         [ObservableProperty] private bool _lossySuggestions = true;
+        [ObservableProperty] 
+        [property: Name("Minimum width to recommend lossy CMPR\n" +
+            "(lossy suggestions must be enabled)")] 
+        private uint _minCMPRWidth = 128;
+
+        [ObservableProperty]
+        [property: Name("Minimum height to recommend lossy CMPR\n" +
+            "(lossy suggestions must be enabled)")]
+        private uint _minCMPRHeight = 128;
     }
     public class TextureInspector : Inspector
     {
@@ -114,8 +125,8 @@ namespace GalaxEyes.Inspectors
                 {
                     List<InspectorAction> actions = new()
                     {
-                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Name, bestFormat);  }, "Re-encode texture"),
                         new InspectorAction(() => { return PreviewTextureReEncode(filePath, fnode.Name, bestFormat); }, "Re-encode texture (Preview)"),
+                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Name, bestFormat);  }, "Re-encode texture (No preview)"),
                         new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                     };
                     resultList.Add(new Result(ResultType.Optimize, filePath, "Different image encoding recommended", InspectorName, actions, fnode.Name + "\nFormat " + format + " -> " + bestFormat));
@@ -237,7 +248,11 @@ namespace GalaxEyes.Inspectors
             ImageInformation info = new ImageInformation();
             foreach (Rgba32 color in uniqueColors) {
                 if (color.A < 255)
+                {
+                    if (color.A != 0)
+                        info.HasTransparentRange = true;
                     info.HasTransparent = true;
+                }
                 if (color.R != color.G || color.R != color.B)
                 {
                     info.IsGrayscale = false;
@@ -313,11 +328,22 @@ namespace GalaxEyes.Inspectors
                 info.UniqueColorCount = uniqueColors.Count();
             }
 
-            // 4-bit encoding. Very storage efficient but limited grayscale with no transparency
+            // 4-bit I4 encoding. Very storage efficient but limited grayscale with no transparency
             if (info.IsI4Grayscale && !info.HasTransparent)
                 return new ImageAndPaletteFormat(ImageFormat.I4);
 
-            // 4-bit encoding with palette. Palettes use up more space at the end than I4s.
+            // CMPR encoding (64 bits used per sub-block of 16 pixels). Usually pretty lossy but can be lossless
+            if (!info.HasTransparentRange)
+            {
+                int colorTolerance = info.HasTransparent ? 2 : 3; // CMPR supports fully transparent pixels, and my algorithm will prioritize those.
+                if ((Settings.LossySuggestions && (img.Width >= Settings.MinCMPRWidth || img.Height >= Settings.MinCMPRHeight))
+                    || (info.UniqueColorCount <= colorTolerance && !info.HasTransparentRange))
+                {
+                    return new ImageAndPaletteFormat(ImageFormat.CMPR);
+                }
+            }
+
+            // 4-bit C4 encoding with palette. Palettes use up more space at the end than I4s.
             if (info.UniqueColorCount <= 16)
                 return new ImageAndPaletteFormat(ImageFormat.C4, MakePaletteFormat(info));
 

@@ -1,6 +1,7 @@
 ﻿
 using Avalonia.Controls.Documents;
 using Binary_Stream;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Hack.io.BCSV;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
@@ -11,10 +12,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
 
 namespace GalaxEyes.Inspectors
 {
-
+    public partial class AudioTableSettings : InspectorSettings<AudioTableSettings>
+    {
+        [JsonIgnore] public override string FileName => "audio_table_settings.json";
+    }
     public class AudioTableChecker : Inspector
     {
         public static uint STAGE_NAME = 0xE4EC2289;
@@ -22,7 +27,7 @@ namespace GalaxEyes.Inspectors
         public AudioTableChecker() : base("Audio Table Checker")
         {
         }
-        public override IHaveSettings? Settings { get; } = null;
+        public override AudioTableSettings Settings { get; } = AudioTableSettings.Load();
 
         public override List<Result> Check(string filePath)
         {

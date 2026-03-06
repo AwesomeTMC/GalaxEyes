@@ -11,10 +11,9 @@ using System.Threading.Tasks;
 
 namespace GalaxEyes.Inspectors
 {
-    public partial class VanillaFileSettings : FileSettings<VanillaFileSettings>
+    public partial class VanillaFileSettings : InspectorSettings<VanillaFileSettings>
     {
         [JsonIgnore] public override string FileName => "vanilla_optimizer_settings.json";
-
         [ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
     }
     public class VanillaFileOptimizer : Inspector

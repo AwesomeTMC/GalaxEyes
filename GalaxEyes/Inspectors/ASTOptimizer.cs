@@ -10,12 +10,16 @@ using System.Threading;
 
 namespace GalaxEyes.Inspectors
 {
+    public class ASTSettings : InspectorSettings<ASTSettings>
+    {
+        [JsonIgnore] public override string FileName => "ast_settings.json";
+    }
     public class ASTOptimizer : Inspector
     {
         public ASTOptimizer() : base("AST Optimizer")
         {
         }
-        public override IHaveSettings? Settings { get; } = null;
+        public override ASTSettings Settings { get; } = ASTSettings.Load();
 
         public override List<Result> Check(String filePath)
         {

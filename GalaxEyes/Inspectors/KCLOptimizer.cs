@@ -14,9 +14,10 @@ using System.Text.Json.Serialization;
 
 namespace GalaxEyes.Inspectors
 {
-    public partial class KCLSettings : FileSettings<KCLSettings>
+    public partial class KCLSettings : InspectorSettings<KCLSettings>
     {
         [JsonIgnore] public override string FileName => "kcl_settings.json";
+        [ObservableProperty] private bool _isEnabled = true;
 
         [ObservableProperty] [property: Name("Minimum duplicates to show on scan")] private uint _minimumDuplicates = 16;
         [ObservableProperty] private uint _maxTrianglesPerCube = 25;

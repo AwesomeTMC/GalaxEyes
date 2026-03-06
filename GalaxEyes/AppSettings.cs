@@ -32,6 +32,12 @@ public partial class MainSettings : FileSettings<MainSettings>
 
     [ObservableProperty] private string _currentTheme = "System";
     [ObservableProperty] private string _modDirectory = "";
+    [ObservableProperty] private Dictionary<string, bool> _optimizersEnabled = new Dictionary<string, bool>();
+}
+
+public interface IHaveInspectorSettings : IHaveSettings
+{
+    bool IsEnabled { get; set; }
 }
 
 public interface IHaveSettings
@@ -85,21 +91,45 @@ public partial class LiveSettingEntry : ObservableObject
         _property.GetCustomAttribute<T>(inherit: true);
 }
 
+public abstract partial class InspectorSettings<T> : FileSettings<T>, IHaveInspectorSettings
+    where T : InspectorSettings<T>, new()
+{
+    [ObservableProperty] private bool _isEnabled = true;
+
+    public new List<LiveSettingEntry> GetEditableEntries()
+    {
+        return this.GetType()
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.Name != nameof(IHaveSettings.FileName) && p.Name != nameof(IHaveInspectorSettings.IsEnabled))
+            .Select(p => new LiveSettingEntry(p, this))
+            .ToList();
+    }
+}
+
 public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings
     where T : FileSettings<T>, new()
 {
     public abstract string FileName { get; }
 
+    protected virtual void InitializeNew() { }
+
     public void Save()
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
-        File.WriteAllText(FileName, JsonSerializer.Serialize(this, GetType(), options));
+        File.WriteAllText("Settings/" + FileName, JsonSerializer.Serialize(this, GetType(), options));
     }
 
     public static T Load()
     {
-        string path = new T().FileName;
-        if (!File.Exists(path)) return new T();
+        Directory.CreateDirectory("Settings");
+        string path = "Settings/" + new T().FileName;
+        if (!File.Exists(path))
+        {
+            var newSettings = new T();
+            newSettings.InitializeNew();
+            return newSettings;
+        }
+        
 
         try
         {

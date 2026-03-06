@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace GalaxEyes.Inspectors
 {
-    public partial class Yaz0Settings : FileSettings<Yaz0Settings>
+    public partial class Yaz0Settings : InspectorSettings<Yaz0Settings>
     {
         [JsonIgnore] public override string FileName => "yaz0_settings.json";
 
