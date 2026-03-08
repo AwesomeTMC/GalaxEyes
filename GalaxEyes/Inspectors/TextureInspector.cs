@@ -83,11 +83,11 @@ namespace GalaxEyes.Inspectors
             if (arc == null)
                 return resultList;
 
-            foreach (var fnode in arc.FileNodes)
+            foreach (var fnode in Util.SearchArcFiles(arc, "*"))
             {
-                if (!fnode.Name.EndsWith(".tpl") && !fnode.Name.EndsWith(".bti"))
+                if (fnode.Extension != ".tpl" && fnode.Extension != ".bti")
                     continue;
-                var file = Util.TryLoadFileFromArc(arc, fnode.Name);
+                var file = Util.TryLoadFileFromArcByPath(arc, fnode.Path);
                 if (file == null)
                 {
                     Util.AddError(ref resultList, filePath, "Failed to load file from arc", InspectorName, () => { return Check(filePath); }, fnode.Name);
@@ -96,7 +96,7 @@ namespace GalaxEyes.Inspectors
                 file.Endian = arc.Endian;
                 Image<Rgba32> image;
                 ImageFormat format;
-                if (fnode.Name.EndsWith(".tpl"))
+                if (fnode.Extension == ".tpl")
                 {
                     // TODO: make this work with multiple images in the TPL...?
                     // The game doesn't use multiple images in a TPL, though
@@ -110,7 +110,7 @@ namespace GalaxEyes.Inspectors
                     image = tplImg.Image;
                     format = tplImg.Format;
                 }
-                else // filename ends with bti
+                else // file is a bti
                 {
                     var bti = new BTI(file);
 
@@ -125,8 +125,8 @@ namespace GalaxEyes.Inspectors
                 {
                     List<InspectorAction> actions = new()
                     {
-                        new InspectorAction(() => { return PreviewTextureReEncode(filePath, fnode.Name, bestFormat); }, "Re-encode texture (Preview)"),
-                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Name, bestFormat);  }, "Re-encode texture (No preview)"),
+                        new InspectorAction(() => { return PreviewTextureReEncode(filePath, fnode.Path, bestFormat); }, "Re-encode texture (Preview)"),
+                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Path, bestFormat);  }, "Re-encode texture (No preview)"),
                         new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                     };
                     resultList.Add(new Result(ResultType.Optimize, filePath, "Different image encoding recommended", InspectorName, actions, fnode.Name + "\nFormat " + format + " -> " + bestFormat));
@@ -136,25 +136,25 @@ namespace GalaxEyes.Inspectors
             return resultList;
         }
 
-        private async Task<List<Result>> PreviewTextureReEncode(string arcPath, string fileName, ImageAndPaletteFormat bestFormat)
+        private async Task<List<Result>> PreviewTextureReEncode(string arcPath, string filePath, ImageAndPaletteFormat bestFormat)
         {
-            var thisFunc = () => { return PreviewTextureReEncode(arcPath, fileName, bestFormat); };
+            var thisFunc = () => { return PreviewTextureReEncode(arcPath, filePath, bestFormat); };
             List<Result> resultList = new List<Result>();
 
             var arc = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
             if (arc == null)
                 return resultList;
 
-            var fileNode = Util.TryLoadFileNodeFromArc(arc, fileName);
-            if (fileNode == null)
+            var fileNode = Util.TryLoadFileNodeFromArcByPath(arc, filePath);
+            if (fileNode == null || fileNode.FileData == null)
             {
-                Util.AddError(ref resultList, arcPath, "Failed to load file from arc", InspectorName, thisFunc, fileName);
+                Util.AddError(ref resultList, arcPath, "Failed to load file from arc", InspectorName, thisFunc, filePath);
                 return resultList;
             }
-            var file = new BinaryStream(new MemoryStream(fileNode.Data), arc.Endian);
+            var file = new BinaryStream(new MemoryStream(fileNode.FileData), arc.Endian);
             Image<Rgba32> baseImage;
             ImageAndPaletteFormat baseFormat;
-            if (fileName.EndsWith(".tpl"))
+            if (filePath.EndsWith(".tpl"))
             {
                 var tpl = new TPL(file);
                 baseImage = tpl.Images[0].Image;
@@ -171,7 +171,7 @@ namespace GalaxEyes.Inspectors
 
             bool choice = await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var window = new ImagePreviewWindow(baseImage, arcPath + "/" + fileName, baseFormat, bestFormat);
+                var window = new ImagePreviewWindow(baseImage, arcPath + "/" + filePath, baseFormat, bestFormat);
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     var mainWindow = desktop.MainWindow;
@@ -185,30 +185,30 @@ namespace GalaxEyes.Inspectors
 
             if (choice)
             {
-                return ReEncodeTexture(arcPath, fileName, bestFormat);
+                return ReEncodeTexture(arcPath, filePath, bestFormat);
             }
             return new();
         }
 
-        private List<Result> ReEncodeTexture(string arcPath, string fileName, ImageAndPaletteFormat bestFormat)
+        private List<Result> ReEncodeTexture(string arcPath, string filePath, ImageAndPaletteFormat bestFormat)
         {
-            var thisFunc = () => { return Task.FromResult(ReEncodeTexture(arcPath, fileName, bestFormat)); };
+            var thisFunc = () => { return Task.FromResult(ReEncodeTexture(arcPath, filePath, bestFormat)); };
             List<Result> resultList = new List<Result>();
 
             var arc = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
             if (arc == null)
                 return resultList;
 
-            var fileNode = Util.TryLoadFileNodeFromArc(arc, fileName);
-            if (fileNode == null)
+            var fileNode = Util.TryLoadFileNodeFromArcByPath(arc, filePath);
+            if (fileNode == null || fileNode.FileData == null)
             {
-                Util.AddError(ref resultList, arcPath, "Failed to load file from arc", InspectorName, thisFunc, fileName);
+                Util.AddError(ref resultList, arcPath, "Failed to load file from arc", InspectorName, thisFunc, filePath);
                 return resultList;
             }
-            var file = new BinaryStream(new MemoryStream(fileNode.Data), arc.Endian);
+            var file = new BinaryStream(new MemoryStream(fileNode.FileData), arc.Endian);
 
             BinaryStream outStrm = new BinaryStream(file.Endian);
-            if (fileName.EndsWith(".tpl"))
+            if (filePath.EndsWith(".tpl"))
             {
                 var tpl = new TPL(file);
                 var tplImg = tpl.Images[0];
@@ -224,7 +224,7 @@ namespace GalaxEyes.Inspectors
                 bti.Write(outStrm);
             }
 
-            fileNode.SetFileData(outStrm.ToArray());
+            fileNode.FileData = outStrm.ToArray();
             Util.TrySaveArchive(ref resultList, arcPath, InspectorName, arc, thisFunc);
             return resultList;
         }

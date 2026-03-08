@@ -24,6 +24,12 @@ public sealed class NameAttribute(string name) : Attribute
     public string Name { get; } = name;
 }
 
+public enum ArchiveHandler
+{
+    HackIO = 0,
+    JKRLib = 1
+}
+
 public partial class MainSettings : FileSettings<MainSettings>
 {
     private static MainSettings? _instance;
@@ -31,6 +37,7 @@ public partial class MainSettings : FileSettings<MainSettings>
     [JsonIgnore] public override string FileName => "main_settings.json";
 
     [ObservableProperty] private string _currentTheme = "System";
+    [ObservableProperty] private ArchiveHandler _archiveHandler = ArchiveHandler.HackIO;
     [ObservableProperty] private string _modDirectory = "";
     [ObservableProperty] private Dictionary<string, bool> _optimizersEnabled = new Dictionary<string, bool>();
 }

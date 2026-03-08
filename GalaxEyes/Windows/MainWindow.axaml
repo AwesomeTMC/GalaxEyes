@@ -243,6 +243,11 @@
 					<ComboBox
 					ItemsSource="{Binding Themes}"
 					SelectedItem="{Binding Settings.Instance.CurrentTheme}" SelectionChanged="ThemeChanged"/>
+					
+					<TextBlock Text="Archive Handler"/>
+					<ComboBox
+					ItemsSource="{Binding ArchiveHandlers}"
+					SelectedIndex="{Binding Settings.Instance.ArchiveHandler}"/>
 				</StackPanel>
 
 			</ContentControl>

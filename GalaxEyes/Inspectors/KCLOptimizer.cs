@@ -39,8 +39,8 @@ namespace GalaxEyes.Inspectors
             
 
             var objectName = Path.GetFileName(filePath).Replace(".arc", "");
-            bool hasKcl = arc.FindFile(objectName + ".kcl").Count() > 0;
-            bool hasPa = arc.FindFile(objectName + ".pa").Count() > 0;
+            bool hasKcl = Util.TryLoadFileNodeFromArcByName(arc, objectName + ".kcl") != null;
+            bool hasPa = Util.TryLoadFileNodeFromArcByName(arc, objectName + ".pa") != null;
             if (!hasKcl || !hasPa)
                 return resultList;
 
@@ -70,10 +70,10 @@ namespace GalaxEyes.Inspectors
             return true;
         }
 
-        private KCL InKcl(JKRArchive arc, string kclPath)
+        private KCL InKcl(IArchive arc, string kclPath)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var strm = Util.TryLoadFileFromArc(arc, kclPath);
+            var strm = Util.TryLoadFileFromArcByName(arc, kclPath);
             if (strm == null)
                 throw new FileNotFoundException("KCL not found in arc!");
             var kcl = new KCL();
@@ -82,47 +82,47 @@ namespace GalaxEyes.Inspectors
             return kcl;
         }
 
-        private void OutKcl(JKRArchive arc, KCL kcl, string kclPath)
+        private void OutKcl(IArchive arc, KCL kcl, string kclName)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var kclFile = arc.FindFile(kclPath)?.First<JKRFileNode>();
+            var kclFile = Util.TryLoadFileNodeFromArcByName(arc, kclName);
             if (kclFile == null)
             {
-                throw new FileNotFoundException("KCL not found in archive! " + kclPath);
+                throw new FileNotFoundException("KCL not found in archive! " + kclName);
             }
             var data = new MemoryStream();
             StreamUtil.PushEndian(endian);
             kcl.Write(data);
-            kclFile.SetFileData(data.ToArray());
+            kclFile.FileData = data.ToArray();
         }
 
-        private BCSV InPa(JKRArchive arc, string paPath)
+        private BCSV InPa(IArchive arc, string paName)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var strm = Util.TryLoadFileFromArc(arc, paPath);
+            var strm = Util.TryLoadFileFromArcByName(arc, paName);
             if (strm == null)
-                throw new FileNotFoundException("KCL not found in arc!");
+                throw new FileNotFoundException("PA not found in arc!");
             var bcsv = new BCSV();
             StreamUtil.PushEndian(endian);
             bcsv.Load(strm);
             return bcsv;
         }
 
-        private void OutPa(JKRArchive arc, BCSV pa, string filePath)
+        private void OutPa(IArchive arc, BCSV pa, string paName)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var paFile = arc.FindFile(filePath)?.First<JKRFileNode>();
+            var paFile = Util.TryLoadFileNodeFromArcByName(arc, paName);
             if (paFile == null)
             {
-                throw new FileNotFoundException("PA not found in archive! " + filePath);
+                throw new FileNotFoundException("PA not found in archive! " + paName);
             }
             var data = new MemoryStream();
             StreamUtil.PushEndian(endian);
             pa.Save(data);
-            paFile.SetFileData(data.ToArray());
+            paFile.FileData = data.ToArray();
         }
 
-        private int DuplicateCount(JKRArchive arc, string objectName)
+        private int DuplicateCount(IArchive arc, string objectName)
         {
             // if checking with this is too slow, maybe add an option to turn off counting
             var kcl = InKcl(arc, objectName + ".kcl");

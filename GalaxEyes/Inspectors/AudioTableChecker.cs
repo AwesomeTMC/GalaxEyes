@@ -32,21 +32,21 @@ namespace GalaxEyes.Inspectors
         public override List<Result> Check(string filePath)
         {
             List<Result> resultList = new List<Result>();
-            JKRArchive? arch = Util.TryLoadArchive(ref resultList, filePath, InspectorName, () => { return Check(filePath); });
+            IArchive? arch = Util.TryLoadArchive(ref resultList, filePath, InspectorName, () => { return Check(filePath); });
             if (arch == null)
                 return resultList;
 
-            var scenarioBgmInfo = arch.FindFile("ScenarioBgmInfo.bcsv")?.First<JKRFileNode>();
-            var stageBgmInfo = arch.FindFile("StageBgmInfo.bcsv").First<JKRFileNode>();
-            if (scenarioBgmInfo == null || stageBgmInfo == null)
+            var scenarioBgmInfo = Util.TryLoadFileNodeFromArcByName(arch, "ScenarioBgmInfo.bcsv");
+            var stageBgmInfo = Util.TryLoadFileNodeFromArcByName(arch, "StageBgmInfo.bcsv");
+            if (scenarioBgmInfo == null || stageBgmInfo == null || scenarioBgmInfo.FileData == null || stageBgmInfo.FileData == null)
             {
-                Util.AddError(ref resultList, filePath, "StageBgmInfo or ScenarioBgmInfo not found", InspectorName, () => { return Check(filePath); });
+                Util.AddError(ref resultList, filePath, "StageBgmInfo or ScenarioBgmInfo data not found", InspectorName, () => { return Check(filePath); });
                 return resultList;
             }
 
 
-            List<string> scenarioBgmStages = CollectStages(scenarioBgmInfo);
-            List<string> stageBgmStages = CollectStages(stageBgmInfo);
+            List<string> scenarioBgmStages = CollectStages(scenarioBgmInfo.FileData, arch.Endian);
+            List<string> stageBgmStages = CollectStages(stageBgmInfo.FileData, arch.Endian);
             foreach (string stageBgmStage in stageBgmStages)
             {
                 if (!scenarioBgmStages.Contains(stageBgmStage))
@@ -81,11 +81,11 @@ namespace GalaxEyes.Inspectors
             return resultList;
         }
 
-        private List<string> CollectStages(JKRFileNode bcsvFile)
+        private List<string> CollectStages(byte[] bcsvData, Endian endian)
         {
             BCSV bcsv = new BCSV();
-            StreamUtil.PushEndianBig();
-            bcsv.Load(new MemoryStream(bcsvFile.Data));
+            StreamUtil.PushEndian(endian == Endian.Big);
+            bcsv.Load(new MemoryStream(bcsvData));
 
             List<string> stages = new();
             for (int i = 0; i < bcsv.EntryCount; i++)
@@ -104,7 +104,7 @@ namespace GalaxEyes.Inspectors
             List<Result> resultList = new List<Result>();
 
             // Load archive
-            JKRArchive? arch = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
+            IArchive? arch = Util.TryLoadArchive(ref resultList, arcPath, InspectorName, thisFunc);
             if (arch == null)
             {
                 // It had an error while loading archive. It has been stored in resultList
@@ -112,16 +112,16 @@ namespace GalaxEyes.Inspectors
             }
 
             // Load BCSV
-            var bcsvFile = arch.FindFile(bcsvPath)?.First<JKRFileNode>();
-            if (bcsvFile == null)
+            var bcsvFile = Util.TryLoadFileNodeFromArcByName(arch, bcsvPath);
+            if (bcsvFile == null || bcsvFile.FileData == null)
             {
-                Util.AddError(ref resultList, arcPath, "File not found", InspectorName, thisFunc, bcsvPath);
+                Util.AddError(ref resultList, arcPath, "File data not found", InspectorName, thisFunc, bcsvPath);
                 return resultList;
             }
             BCSV bcsv = new BCSV();
             bool endian = arch.Endian == Endian.Little ? false : true;
             StreamUtil.PushEndian(endian);
-            bcsv.Load(new MemoryStream(bcsvFile.Data));
+            bcsv.Load(new MemoryStream(bcsvFile.FileData));
 
             // Add to BCSV
             bcsv.Add(entry);
@@ -130,7 +130,7 @@ namespace GalaxEyes.Inspectors
 
             // Save
             bcsv.Save(data);
-            bcsvFile.SetFileData(data.ToArray());
+            bcsvFile.FileData = data.ToArray();
             Util.TrySaveArchive(ref resultList, arcPath, InspectorName, arch, thisFunc);
             return new();
         }

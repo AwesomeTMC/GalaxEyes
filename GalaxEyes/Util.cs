@@ -1,7 +1,11 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Controls.Shapes;
+using Avalonia.Media.Imaging;
 using Binary_Stream;
 using GalaxEyes.Inspectors;
+using Hack.io.Class;
+using Hack.io.Interface;
 using Hack.io.KCL;
+using Hack.io.RARC;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
 using jkr_lib;
@@ -15,9 +19,164 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GalaxEyes;
+
+public interface IArchiveNode
+{
+    public string Name { get; set; }
+    public string? Extension { get; }
+    public string Path { get; }
+    public byte[]? FileData { get; set; }
+}
+
+public interface IArchive
+{
+    public Endian Endian { get; set; }
+    public byte[] ToBytes();
+    public List<IArchiveNode> GetArchiveNodes(string regex);
+    public IArchiveNode? GetArchiveNodeByPath(string filePath)
+    {
+        var matches = GetArchiveNodes("*");
+        foreach (var match in matches)
+        {
+            if (filePath.StartsWith("/"))
+                filePath = filePath.Replace("/", "");
+            if (match.Path == filePath)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
+    public IArchiveNode? GetArchiveNodeByName(string fileName)
+    {
+        var matches = GetArchiveNodes("*");
+        foreach (var match in matches)
+        {
+            if (match.Name == fileName)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
+}
+
+public class HackIORARCFile(ArchiveFile file) : IArchiveNode
+{
+
+    public ArchiveFile ArchiveFile = file;
+    public string Path
+    {
+        get
+        {
+            if (ArchiveFile.Parent == null)
+                return ArchiveFile.Name;
+            return ArchiveFile.FullPath;
+
+        }
+    }
+
+    public string Name { get => ArchiveFile.Name; set => ArchiveFile.Name = value; }
+
+    public string? Extension => ArchiveFile.Extension;
+
+    public byte[]? FileData { get => ArchiveFile.FileData; set => ArchiveFile.FileData = value; }
+}
+
+public class HackIORARC : RARC, IArchive
+{
+    public Endian Endian { get; set; }
+
+    public HackIORARC(byte[] data)
+    {
+        BinaryStream stream = new BinaryStream(data);
+        stream.Endian = Endian.Big;
+        string magic = stream.ReadString(4);
+        if (magic == "RARC")
+            Endian = Endian.Big;
+        else if (magic == "CRAR")
+            Endian = Endian.Little;
+        else
+            throw new InvalidDataException("File is not a RARC! Expected CRAR or RARC, got " + magic);
+        stream.Endian = Endian;
+        stream.Position = 0;
+        StreamUtil.PushEndian(Endian == Endian.Big);
+        Read(stream);
+    }
+
+    public byte[] ToBytes()
+    {
+        BinaryStream outStrm = new BinaryStream();
+        outStrm.Endian = Endian;
+        StreamUtil.PushEndian(Endian == Endian.Big);
+        Write(outStrm);
+        return outStrm.ToArray();
+    }
+
+    public List<IArchiveNode> GetArchiveNodes(string regex)
+    {
+        List<IArchiveNode> nodes = new();
+        foreach (string path in FindItems(regex))
+        {
+            object? file = this[path];
+            if (file is not ArchiveFile node)
+                continue;
+            nodes.Add(new HackIORARCFile(node));
+        }
+        return nodes;
+    }
+}
+
+public class JKRLibRARCFile(JKRFileNode file) : IArchiveNode
+{
+    public JKRFileNode Node { get; set; } = file;
+    public string Name { get => Node.Name; set => Node.Name = value; }
+
+    public string? Extension { 
+        get
+        {
+            string[] parts = Name.Split('.');
+            if (parts.Length == 1)
+                return "";
+            return "." + parts[^1].ToLower();
+        } 
+    }
+
+    public string Path => Node.ToString();
+
+    public byte[]? FileData { get => Node.Data; set => Node.SetFileData(value ?? new byte[0]); }
+}
+
+public class JKRLibRARC : JKRArchive, IArchive
+{
+    public JKRLibRARC(ReadOnlySpan<byte> span) : base(span)
+    {
+    }
+
+    Endian IArchive.Endian { get => Endian; set => Endian = value; }
+
+    public List<IArchiveNode> GetArchiveNodes(string regex)
+    {
+        List<IArchiveNode> nodes = new();
+        foreach (var node in FileNodes)
+        {
+            if (regex == "*" || Regex.IsMatch(node.Name, regex))
+                nodes.Add(new JKRLibRARCFile(node));
+        }
+        return nodes;
+    }
+
+    public byte[] ToBytes()
+    {
+        BinaryStream writer = new(Endian);
+        Write(writer);
+        return writer.ToArray();
+    }
+}
 
 public static class Util
 {
@@ -108,18 +267,18 @@ public static class Util
         }
         foreach (string vanillaDirectory in VanillaDirectories)
         {
-            if (!Directory.Exists(Path.Combine(directory, vanillaDirectory)))
+            if (!Directory.Exists(System.IO.Path.Combine(directory, vanillaDirectory)))
                 return false;
         }
         return true;
     }
 
-    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<List<Result>> retryCallback)
+    public static IArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<List<Result>> retryCallback)
     {
         return TryLoadArchive(ref results, arcPath, inspectorName, Util.FromResult(retryCallback));
     }
 
-    public static JKRArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<Task<List<Result>>> retryCallback)
+    public static IArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<Task<List<Result>>> retryCallback)
     {
         List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
         [
@@ -132,7 +291,12 @@ public static class Util
             {
                 data = File.ReadAllBytes(arcPath);
             }
-            return new JKRArchive(data);
+            if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.JKRLib)
+                return new JKRLibRARC(data);
+            else if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.HackIO)
+                return new HackIORARC(data);
+            else
+                throw new NotImplementedException("Archive handler " + MainSettings.Instance.ArchiveHandler + " not implemented!");
         }
         catch (BadImageFormatException e)
         {
@@ -141,12 +305,12 @@ public static class Util
         }
     }
 
-    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, JKRArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, IArchive arc, Func<List<Result>> retryCallback, uint strength = 0x1000)
     {
         return TrySaveArchive(ref results, arcPath, inspectorName, arc, Util.FromResult(retryCallback), strength);
     }
 
-    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, JKRArchive arc, Func<Task<List<Result>>> retryCallback, uint strength = 0x1000)
+    public static bool TrySaveArchive(ref List<Result> results, string arcPath, string inspectorName, IArchive arc, Func<Task<List<Result>>> retryCallback, uint strength = 0x1000)
     {
         try
         {
@@ -173,23 +337,37 @@ public static class Util
         return result;
     }
 
-    public static BinaryStream? TryLoadFileFromArc(JKRArchive arc, string filePath)
+    public static BinaryStream? TryLoadFileFromArcByPath(IArchive arc, string filePath)
     {
-        var iter = arc.FindFile(filePath);
-        if (iter.Count() == 0)
+        var file = TryLoadFileNodeFromArcByPath(arc, filePath);
+        if (file == null || file.FileData == null)
             return null;
-        var file = iter.First<JKRFileNode>();
-        var strm = new BinaryStream(file.Data);
+        var strm = new BinaryStream(file.FileData);
         return strm;
     }
 
-    public static JKRFileNode? TryLoadFileNodeFromArc(JKRArchive arc, string filePath)
+    public static IArchiveNode? TryLoadFileNodeFromArcByPath(IArchive arc, string filePath)
     {
-        var iter = arc.FindFile(filePath);
-        if (iter.Count() == 0)
+        return arc.GetArchiveNodeByPath(filePath);
+    }
+
+    public static BinaryStream? TryLoadFileFromArcByName(IArchive arc, string filePath)
+    {
+        var file = TryLoadFileNodeFromArcByName(arc, filePath);
+        if (file == null || file.FileData == null)
             return null;
-        var file = iter.First<JKRFileNode>();
-        return file;
+        var strm = new BinaryStream(file.FileData);
+        return strm;
+    }
+
+    public static IArchiveNode? TryLoadFileNodeFromArcByName(IArchive arc, string fileName)
+    {
+        return arc.GetArchiveNodeByName(fileName);
+    }
+
+    public static List<IArchiveNode> SearchArcFiles(IArchive arc, string regex)
+    {
+        return arc.GetArchiveNodes(regex);
     }
 
     /// <summary>

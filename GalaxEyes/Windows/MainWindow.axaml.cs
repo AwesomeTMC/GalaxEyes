@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace GalaxEyes;
@@ -161,6 +162,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         "Light",
         "System"
     };
+
+    public static ArchiveHandler[] ArchiveHandlers => (ArchiveHandler[])Enum.GetValues(typeof(ArchiveHandler));
 
     private void ScrollHandler(object? sender, Avalonia.Controls.Primitives.ScrollEventArgs e)
     {
