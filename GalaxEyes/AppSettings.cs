@@ -37,7 +37,7 @@ public partial class MainSettings : FileSettings<MainSettings>
     [JsonIgnore] public override string FileName => "main_settings.json";
 
     [ObservableProperty] private string _currentTheme = "System";
-    [ObservableProperty] private ArchiveHandler _archiveHandler = ArchiveHandler.HackIO;
+    [ObservableProperty] private ArchiveHandler _archiveHandler = ArchiveHandler.JKRLib;
     [ObservableProperty] private string _modDirectory = "";
     [ObservableProperty] private Dictionary<string, bool> _optimizersEnabled = new Dictionary<string, bool>();
 }
