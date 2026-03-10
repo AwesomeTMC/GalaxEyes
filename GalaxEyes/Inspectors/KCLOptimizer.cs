@@ -197,5 +197,19 @@ namespace GalaxEyes.Inspectors
             Util.TrySaveArchive(ref resultList, arcPath, InspectorName, arc, thisFunc);
             return resultList;
         }
+
+        public override List<Result> SettingsCheck()
+        {
+            List<Result> results = new();
+            if (Settings.MinimumDuplicates == 0)
+            {
+                Util.AddError(ref results,
+                    "*",
+                    "KCL Settings improperly set!",
+                    InspectorName, Util.NULL_ACTION,
+                    "Minimum duplicates must be at least 1");
+            }
+            return results;
+        }
     }
 }
