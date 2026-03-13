@@ -311,7 +311,6 @@ namespace GalaxEyes.Inspectors
 
             HashSet<Rgba32> uniqueColors = NinTextures.Util.GetUniqueColorsSet(img);
             ImageInformation info = CalculateImageInformation(uniqueColors);
-            Debug.Write(info.ToString() + ". " + format);
 
             // For RGBA32: Lossy but worth it
             // For C14X2: Already uses up 16 (14, 2 not used) bits per color plus palette data at the end, this will always shrink the file size with no loss

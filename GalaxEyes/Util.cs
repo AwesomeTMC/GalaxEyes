@@ -279,17 +279,9 @@ public static class Util
 
     public static IArchive? TryLoadArchive(ref List<Result> results, string arcPath, string inspectorName, Func<Task<List<Result>>> retryCallback)
     {
-        List<(Func<Stream, bool> CheckFunc, Func<byte[], byte[]> DecodeFunction)> DecompFuncs =
-        [
-            (YAZ0.Check, YAZ0.Decompress)
-        ];
         try
         {
-            var data = FileUtil.ReadWithDecompression(arcPath, [.. DecompFuncs]);
-            if (data == null)
-            {
-                data = File.ReadAllBytes(arcPath);
-            }
+            var data = Yaz0.Decompress(File.ReadAllBytes(arcPath));
             if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.JKRLib)
                 return new JKRLibRARC(data);
             else if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.HackIO)

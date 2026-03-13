@@ -181,7 +181,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         SetAllEnabled(false);
         await Task.Yield();
+        var stopwatch = Stopwatch.StartNew();
         await StartScan();
+        stopwatch.Stop();
+        Debug.WriteLine("Scanning complete. Took " + stopwatch.Elapsed.ToString());
         SetAllEnabled(true);
     }
 
@@ -305,7 +308,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async void ResolveButtonEvent(object? sender, RoutedEventArgs args)
     {
         SetAllEnabled(false);
+        Debug.WriteLine("Starting resolve...");
+        var stopwatch = Stopwatch.StartNew();
         await StartResolve();
+        stopwatch.Stop();
+        Debug.WriteLine("Resolving complete. Took " +  stopwatch.Elapsed.ToString());
         SetAllEnabled(true);
     }
 
