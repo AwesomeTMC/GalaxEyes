@@ -1,6 +1,7 @@
 ﻿using Binary_Stream;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Hack.io.BCSV;
+using Hack.io.Class;
 using Hack.io.KCL;
 using Hack.io.Utility;
 using jkr_lib;
@@ -73,11 +74,11 @@ namespace GalaxEyes.Inspectors
         private KCL InKcl(IArchive arc, string kclPath)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var strm = Util.TryLoadFileFromArcByName(arc, kclPath);
+            var strm = Util.TryLoadFileFromArcByName(arc, kclPath)?.Wrap();
             if (strm == null)
                 throw new FileNotFoundException("KCL not found in arc!");
+            strm.Endian = (StreamEndian)arc.Endian;
             var kcl = new KCL();
-            StreamUtil.PushEndian(endian);
             kcl.Read(strm);
             return kcl;
         }
@@ -90,8 +91,8 @@ namespace GalaxEyes.Inspectors
             {
                 throw new FileNotFoundException("KCL not found in archive! " + kclName);
             }
-            var data = new MemoryStream();
-            StreamUtil.PushEndian(endian);
+            var data = new MemoryStream().Wrap();
+            data.Endian = (StreamEndian)arc.Endian;
             kcl.Write(data);
             kclFile.FileData = data.ToArray();
         }
@@ -99,11 +100,11 @@ namespace GalaxEyes.Inspectors
         private BCSV InPa(IArchive arc, string paName)
         {
             bool endian = arc.Endian == Binary_Stream.Endian.Big;
-            var strm = Util.TryLoadFileFromArcByName(arc, paName);
+            var strm = Util.TryLoadFileFromArcByName(arc, paName)?.Wrap();
             if (strm == null)
                 throw new FileNotFoundException("PA not found in arc!");
+            strm.Endian = (StreamEndian)arc.Endian;
             var bcsv = new BCSV();
-            StreamUtil.PushEndian(endian);
             bcsv.Load(strm);
             return bcsv;
         }
@@ -116,8 +117,8 @@ namespace GalaxEyes.Inspectors
             {
                 throw new FileNotFoundException("PA not found in archive! " + paName);
             }
-            var data = new MemoryStream();
-            StreamUtil.PushEndian(endian);
+            var data = new MemoryStream().Wrap();
+            data.Endian = (StreamEndian)arc.Endian;
             pa.Save(data);
             paFile.FileData = data.ToArray();
         }

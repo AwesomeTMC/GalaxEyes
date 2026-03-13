@@ -12,6 +12,7 @@ using jkr_lib;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -104,16 +105,14 @@ public class HackIORARC : RARC, IArchive
             throw new InvalidDataException("File is not a RARC! Expected CRAR or RARC, got " + magic);
         stream.Endian = Endian;
         stream.Position = 0;
-        StreamUtil.PushEndian(Endian == Endian.Big);
-        Read(stream);
+        Read(new UtilityStream(stream, (StreamEndian)stream.Endian));
     }
 
     public byte[] ToBytes()
     {
         BinaryStream outStrm = new BinaryStream();
         outStrm.Endian = Endian;
-        StreamUtil.PushEndian(Endian == Endian.Big);
-        Write(outStrm);
+        Write(new UtilityStream(outStrm, (StreamEndian)outStrm.Endian));
         return outStrm.ToArray();
     }
 
@@ -315,7 +314,6 @@ public static class Util
         try
         {
             var data = arc.ToBytes();
-            StreamUtil.PushEndian(arc.Endian == Endian.Little ? false : true);
             var yaz0_data = YAZ0.Compress_Strong(data, null, strength);
             WriteAllBytesSafe(arcPath, yaz0_data);
             return true;

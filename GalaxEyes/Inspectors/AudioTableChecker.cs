@@ -3,6 +3,7 @@ using Avalonia.Controls.Documents;
 using Binary_Stream;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Hack.io.BCSV;
+using Hack.io.Class;
 using Hack.io.Utility;
 using Hack.io.YAZ0;
 using jkr_lib;
@@ -84,8 +85,7 @@ namespace GalaxEyes.Inspectors
         private List<string> CollectStages(byte[] bcsvData, Endian endian)
         {
             BCSV bcsv = new BCSV();
-            StreamUtil.PushEndian(endian == Endian.Big);
-            bcsv.Load(new MemoryStream(bcsvData));
+            bcsv.Load(new UtilityStream(new MemoryStream(bcsvData), (StreamEndian)endian));
 
             List<string> stages = new();
             for (int i = 0; i < bcsv.EntryCount; i++)
@@ -119,14 +119,11 @@ namespace GalaxEyes.Inspectors
                 return resultList;
             }
             BCSV bcsv = new BCSV();
-            bool endian = arch.Endian == Endian.Little ? false : true;
-            StreamUtil.PushEndian(endian);
-            bcsv.Load(new MemoryStream(bcsvFile.FileData));
+            bcsv.Load(new UtilityStream(new MemoryStream(bcsvFile.FileData), (StreamEndian)arch.Endian));
 
             // Add to BCSV
             bcsv.Add(entry);
-            var data = new MemoryStream();
-            StreamUtil.PushEndian(endian);
+            var data = new UtilityStream(new MemoryStream(), (StreamEndian)arch.Endian);
 
             // Save
             bcsv.Save(data);

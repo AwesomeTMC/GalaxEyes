@@ -5,6 +5,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using GalaxEyes.Inspectors;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GalaxEyes;
@@ -231,7 +233,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         var finalState = await Task.Run(() =>
         {
-            List<Result> tempResults = new();
+            ConcurrentBag<Result> tempResults = new();
 
             List<Inspector> inspectors = new List<Inspector>();
             foreach (Inspector inspector in allInspectors)
@@ -244,16 +246,25 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 if (inspectorResults.Count == 0)
                     inspectors.Add(inspector);
                 else
-                    tempResults.AddRange(inspectorResults);
+                {
+                    Parallel.ForEach(inspectorResults, x =>
+                    {
+                        tempResults.Add(x);
+                    });
+                }
             }
 
             if (Directory.Exists(targetDirectory) && inspectors.Count > 0)
             {
                 var files = Directory.EnumerateFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
-                foreach (String file in files)
+                Parallel.ForEach(files, file =>
                 {
-                    tempResults.AddRange(ScanFile(file, inspectors));
-                }
+                    var scanResults = ScanFile(file, inspectors);
+                    foreach (var scanResult in scanResults)
+                    {
+                        tempResults.Add(scanResult);
+                    }
+                });
             }
 
             var state = new ResultsState();

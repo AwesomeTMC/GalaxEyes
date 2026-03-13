@@ -1,4 +1,5 @@
 ﻿using Hack.io.BCSV;
+using Hack.io.Class;
 using Hack.io.Utility;
 using System.Collections;
 using System.ComponentModel;
@@ -27,9 +28,9 @@ namespace Hack.io.KCL
         uint MaskX, MaskY, MaskZ, ShiftX, ShiftY, ShiftZ;
 
         public KCL() { }
-        public KCL(string file, BackgroundWorker? bgw = null)
+        public KCL(string file, BackgroundWorker? bgw = null, StreamEndian endian = StreamEndian.Big)
         {
-            FileStream FS = new FileStream(file, FileMode.Open);
+            UtilityStream FS = new UtilityStream(new FileStream(file, FileMode.Open), endian);
             Read(FS, bgw);
             FS.Close();
             FileName = file;
@@ -151,15 +152,15 @@ namespace Hack.io.KCL
             bgw?.ReportProgress(100, 1);
         }
 
-        public void Save(string file, BackgroundWorker? bgw = null)
+        public void Save(string file, BackgroundWorker? bgw = null, StreamEndian endian = StreamEndian.Big)
         {
-            FileStream FS = new FileStream(file, FileMode.Create);
+            UtilityStream FS = new UtilityStream(new FileStream(file, FileMode.Create), endian);
             Write(FS, bgw);
             FS.Close();
             FileName = file;
         }
 
-        public void Read(Stream KCLFile, BackgroundWorker? bgw = null)
+        public void Read(UtilityStream KCLFile, BackgroundWorker? bgw = null)
         {
             int MaxItemsForPogress = 0;
             bgw?.ReportProgress(0, 0);
@@ -223,7 +224,7 @@ namespace Hack.io.KCL
             bgw?.ReportProgress(100, 0);
         }
 
-        public void Write(Stream KCLFile, BackgroundWorker? bgw = null)
+        public void Write(UtilityStream KCLFile, BackgroundWorker? bgw = null)
         {
             int OctreeNodeCount = GetNodeCount(OctreeRoots);
             Queue<Octree[]> queuedNodes = new Queue<Octree[]>();
@@ -428,7 +429,7 @@ namespace Hack.io.KCL
             public ushort GroupIndex;
 
             public KCLFace() { }
-            public KCLFace(Stream KCLFile)
+            public KCLFace(UtilityStream KCLFile)
             {
                 Length = KCLFile.ReadSingle();
                 PositionIndex = KCLFile.ReadUInt16();
@@ -441,7 +442,7 @@ namespace Hack.io.KCL
 
             public override string ToString() => $"KCLFace: P = {PositionIndex} | D = {DirectionIndex} | A = {NormalAIndex} | B = {NormalBIndex} | C = {NormalCIndex} | Group = {GroupIndex}";
 
-            internal void Write(Stream KCLFile)
+            internal void Write(UtilityStream KCLFile)
             {
                 KCLFile.WriteSingle(Length);
                 KCLFile.WriteUInt16(PositionIndex);
@@ -469,7 +470,7 @@ namespace Hack.io.KCL
 
             // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
-            internal Octree(Stream KCLFile, long parentOffset)
+            internal Octree(UtilityStream KCLFile, long parentOffset)
             {
                 Key = KCLFile.ReadUInt32();
                 int terminator = 0x00;
