@@ -167,6 +167,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public static ArchiveHandler[] ArchiveHandlers => (ArchiveHandler[])Enum.GetValues(typeof(ArchiveHandler));
 
+    private ConcurrentDictionary<string, SemaphoreSlim> FileLocks = new();
+
     private void ScrollHandler(object? sender, Avalonia.Controls.Primitives.ScrollEventArgs e)
     {
     }
@@ -312,7 +314,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var stopwatch = Stopwatch.StartNew();
         await StartResolve();
         stopwatch.Stop();
-        Debug.WriteLine("Resolving complete. Took " +  stopwatch.Elapsed.ToString());
+        Debug.WriteLine("Resolving complete. Took " + stopwatch.Elapsed.ToString());
         SetAllEnabled(true);
     }
 
@@ -323,47 +325,63 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         RightPaneContent = new LoadingState("Resolving...");
 
-        List<Result> newResults = await Task.Run(async () =>
+        ConcurrentBag<Result> newResults = await Task.Run(async () =>
         {
-            List<Result> tempResults = new();
-            foreach (var group in resultsState.ResultList)
+            ConcurrentBag<Result> tempResults = new();
+            var options = new ParallelOptions
             {
-                foreach (var result in group.InspectorResults)
-                {
-                    if (result == null || result.SelectedAction == null)
-                        continue;
-
-                    try
-                    {
-                        tempResults.AddRange(await result.SelectedAction.Callback());
-                    }
-                    catch (Exception e)
-                    {
-                        Util.AddException(ref tempResults, e, result.FilePath, result.InspectorName, result.SelectedAction.Callback);
-                    }
-                }
-
-            }
-
-            return tempResults;
-        });
-
-        newResults.AddRange(await Task.Run(async () =>
-        {
-            List<Result> tempResults = new();
-            foreach (var inspector in AllInspectors.Items)
+                MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+            };
+            await Parallel.ForEachAsync(resultsState.ResultList.SelectMany(g => g.InspectorResults), options, async (result, cancellationToken) =>
             {
+                if (result?.SelectedAction == null)
+                    return;
+
+                var semaphore = FileLocks.GetOrAdd(result.FilePath, _ => new SemaphoreSlim(1, 1));
+
+                await semaphore.WaitAsync(cancellationToken);
+
                 try
                 {
-                    tempResults.AddRange(await inspector.RunAfter());
+                    var curResults = await result.SelectedAction.Callback();
+                    foreach (Result tempResult in curResults)
+                    {
+                        tempResults.Add(tempResult);
+                    }
                 }
                 catch (Exception e)
                 {
-                    Util.AddException(ref tempResults, e, "All files", inspector.InspectorName, () => { return inspector.RunAfter(); });
+                    List<Result> exceptionResults = new List<Result>();
+                    Util.AddException(ref exceptionResults, e, result.FilePath, result.InspectorName, result.SelectedAction.Callback);
+                    foreach (Result exceptionResult in exceptionResults)
+                        tempResults.Add(exceptionResult);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+            
+            return tempResults;
+        });
+
+        List<Result> tempResults = new();
+        foreach (var inspector in AllInspectors.Items)
+        {
+            try
+            {
+                foreach (Result result in await inspector.RunAfter())
+                {
+                    tempResults.Add(result);
                 }
             }
-            return tempResults;
-        }));
+            catch (Exception e)
+            {
+                Util.AddException(ref tempResults, e, "All files", inspector.InspectorName, inspector.RunAfter);
+            }
+        }
+        foreach (var result in tempResults)
+            newResults.Add(result);
 
 
 
