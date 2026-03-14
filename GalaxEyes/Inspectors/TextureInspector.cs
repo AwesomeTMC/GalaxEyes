@@ -151,37 +151,60 @@ namespace GalaxEyes.Inspectors
                 Util.AddError(ref resultList, arcPath, "Failed to load file from arc", InspectorName, thisFunc, filePath);
                 return resultList;
             }
-            var file = new BinaryStream(new MemoryStream(fileNode.FileData), arc.Endian);
+            var inFile = new BinaryStream(new MemoryStream(fileNode.FileData), arc.Endian);
+            var outFile = new BinaryStream(arc.Endian);
             Image<Rgba32> baseImage;
+            Image<Rgba32> bestImage;
             ImageAndPaletteFormat baseFormat;
             if (filePath.EndsWith(".tpl"))
             {
-                var tpl = new TPL(file);
+                var tpl = new TPL(inFile);
                 baseImage = tpl.Images[0].Image;
                 baseFormat.ImageFormat = tpl.Images[0].Format;
                 baseFormat.PaletteFormat = tpl.Images[0].PaletteFormat;
+                tpl.Images[0].Format = bestFormat.ImageFormat;
+                tpl.Images[0].PaletteFormat = bestFormat.PaletteFormat;
+                tpl.Write(outFile);
+                outFile.Position = 0;
+                bestImage = new TPL(outFile).Images[0].Image;
             }
             else // filename ends with bti
             {
-                var bti = new BTI(file);
+                var bti = new BTI(inFile);
                 baseImage = bti.Image;
                 baseFormat.ImageFormat = bti.Format;
                 baseFormat.PaletteFormat = bti.PaletteFormat;
+                bti.Format = bestFormat.ImageFormat;
+                bti.PaletteFormat = bestFormat.PaletteFormat;
+                bti.Write(outFile);
+                outFile.Position = 0;
+                bestImage = new BTI(outFile).Image;
             }
 
-            bool choice = await Dispatcher.UIThread.InvokeAsync(async () =>
+            var baseImageDetails = new ImageDetails(Util.ToAvaloniaBitmap(baseImage), baseFormat, inFile.Length);
+            var bestImageDetails = new ImageDetails(Util.ToAvaloniaBitmap(bestImage), bestFormat, outFile.Length);
+
+            await App.UsingImagePreviewWindow.WaitAsync();
+            bool choice = false;
+            try
             {
-                var window = new ImagePreviewWindow(baseImage, arcPath + "/" + filePath, baseFormat, bestFormat);
-                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                choice = await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    var mainWindow = desktop.MainWindow;
-                    if (mainWindow == null)
-                        return false;
-                    return await window.ShowDialog<bool>(mainWindow);
-                }
-                return false;
-                
-            });
+                    var window = new ImagePreviewWindow(arcPath + "/" + filePath,  baseImageDetails, bestImageDetails);
+
+                    if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                    {
+                        return await window.ShowDialog<bool>(desktop.MainWindow);
+                    }
+                    return false;
+                });
+            }
+            finally
+            {
+                App.UsingImagePreviewWindow.Release();
+                baseImageDetails.AvaloniaImage.Dispose();
+                bestImageDetails.AvaloniaImage.Dispose();
+            }
 
             if (choice)
             {

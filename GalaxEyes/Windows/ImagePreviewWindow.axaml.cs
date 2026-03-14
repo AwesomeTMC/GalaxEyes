@@ -16,33 +16,28 @@ using System.IO;
 
 namespace GalaxEyes;
 
+public class ImageDetails(Bitmap image, ImageAndPaletteFormat format, long size)
+{
+    public Bitmap AvaloniaImage = image;
+    public ImageAndPaletteFormat Format = format;
+    public long Size = size;
+}
+
 public partial class ImagePreviewWindow : Window, INotifyPropertyChanged
 {
     public ImageAndPaletteFormat BaseFormat { get; set; }
     public ImageAndPaletteFormat BestFormat { get; set; }
-    public ImagePreviewWindow(Image<Rgba32> baseImage, string baseImageFullPath, ImageAndPaletteFormat baseFormat, ImageAndPaletteFormat bestFormat)
+    public ImagePreviewWindow(string baseImageFullPath, ImageDetails baseImage, ImageDetails bestImage)
     {
-        BaseFormat = baseFormat;
-        BestFormat = bestFormat;
+        BaseFormat = baseImage.Format;
+        BestFormat = bestImage.Format;
         InitializeComponent();
         DataContext = this;
         Title = "Previewing changes for " + baseImageFullPath;
-        BaseImage.Source = Util.ToAvaloniaBitmap(baseImage);
-        BinaryStream baseStream = new BinaryStream();
-        // TODO: Make something in NinTextures that will calculate the size of the image (so I don't have to encode it to see)
-        var basePalette = NinTextures.Util.EncodeTexture(baseStream, baseImage, baseFormat.ImageFormat, baseFormat.PaletteFormat);
-        NinTextures.Util.EncodePalette(baseStream, basePalette, baseFormat.PaletteFormat);
-        BaseFormatSize.Text = baseStream.Length + " bytes";
-        BinaryStream bestStream = new BinaryStream();
-        var palette = NinTextures.Util.EncodeTexture(bestStream, baseImage, bestFormat.ImageFormat, bestFormat.PaletteFormat);
-        var palettePos = bestStream.Position;
-        NinTextures.Util.EncodePalette(bestStream, palette, bestFormat.PaletteFormat);
-        BestFormatSize.Text = bestStream.Length + " bytes";
-        bestStream.Position = palettePos;
-        var newPalette = NinTextures.Util.DecodePalette(bestStream, palette.Count, bestFormat.PaletteFormat);
-        bestStream.Position = 0;
-        var newImage = NinTextures.Util.DecodeTexture(bestStream, baseImage.Width, baseImage.Height, bestFormat.ImageFormat, newPalette);
-        NewImage.Source = Util.ToAvaloniaBitmap(newImage);
+        BaseImage.Source = baseImage.AvaloniaImage;
+        BaseFormatSize.Text = baseImage.Size + " bytes";
+        BestFormatSize.Text = bestImage.Size + " bytes";
+        NewImage.Source = bestImage.AvaloniaImage;
     }
 
     public void UseNewClicked(object sender, RoutedEventArgs e)
