@@ -126,9 +126,7 @@ namespace GalaxEyes.Inspectors
         private int DuplicateCount(IArchive arc, string objectName)
         {
             // if checking with this is too slow, maybe add an option to turn off counting
-            var kcl = InKcl(arc, objectName + ".kcl");
             var pa = InPa(arc, objectName + ".pa");
-            var obj = WavefrontObj.CreateWavefront(kcl);
             int dupeCount = 0;
 
             List<BCSV.Entry> uniqueEntries = new();
