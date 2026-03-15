@@ -1,5 +1,6 @@
 ﻿using Be.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Hack.io.Class;
 using jatast;
 using System;
 using System.Collections.Generic;
@@ -25,8 +26,19 @@ namespace GalaxEyes.Inspectors
         {
             List<Result> resultList = new List<Result>();
 
-            var ast = InAst(filePath);
-            if (ast.format == EncodeFormat.PCM16)
+            using var ast = new UtilityStream(File.OpenRead(filePath), StreamEndian.Big);
+            var magic = ast.ReadMagic(4);
+            if (magic != "STRM")
+            {
+                Util.AddError(ref resultList, filePath, "File has the .ast extension, but does not have the 'STRM' magic. Little endian ASTs are currently not supported.", 
+                    InspectorName, Util.FromResult(() => { return Check(filePath); }), "Magic: " + magic);
+                return resultList;
+            }
+            ast.Position = 0x8;
+            EncodeFormat format = (EncodeFormat)ast.ReadUInt16();
+            ast.Position = 0x10;
+            var sampleRate = ast.ReadUInt32();
+            if (format == EncodeFormat.PCM16)
             {
                 List<InspectorAction> actions = new()
                 {
@@ -35,14 +47,14 @@ namespace GalaxEyes.Inspectors
                 };
                 resultList.Add(new Result(ResultType.Optimize, filePath, "AST encoded in PCM16. Try encoding it in ADPCM.", InspectorName, actions));
             }
-            if (ast.SampleRate > 32000)
+            if (sampleRate > 32000)
             {
                 List<InspectorAction> actions = new()
                 {
                     new InspectorAction(() => {return ResampleAST(filePath); }, "Resample to 32khz"),
                     new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "AST sample rate > 32khz.", InspectorName, actions, ast.SampleRate.ToString()));
+                resultList.Add(new Result(ResultType.Optimize, filePath, "AST sample rate > 32khz.", InspectorName, actions, sampleRate.ToString()));
             }
             return resultList;
         }
