@@ -9,6 +9,7 @@ using Hack.io.YAZ0;
 using jkr_lib;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -78,6 +79,11 @@ namespace GalaxEyes.Inspectors
                     new InspectorAction(Util.NULL_ACTION, "Ignore this once"),
                 };
                 resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in ScenarioBgmInfo, but not StageBgmInfo. This will cause a crash.", InspectorName, actions, scenarioBgmStage));
+            }
+            if (stageBgmStages.Count > 80)
+            {
+                List<InspectorAction> actions = new() { new InspectorAction(Util.NULL_ACTION, "Ignore this once") };
+                resultList.Add(new Result(ResultType.Warn, filePath, "Maximum vanilla entry count exceeded (80) for StageBgmInfo.bcsv. This will cause a crash.", InspectorName, actions, "Entry count: " + stageBgmStages.Count));
             }
             return resultList;
         }
