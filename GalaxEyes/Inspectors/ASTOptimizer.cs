@@ -88,8 +88,9 @@ namespace GalaxEyes.Inspectors
             var newLoopStart = (int)Math.Round(ast.LoopStart * ratio);
             var newLoopEnd = (int)Math.Round(ast.LoopEnd * ratio);
             var oldFormat = ast.format;
+            var hasLoop = ast.Loop;
 
-            // encode to pcm16 since that's the only format ffmpeg likes for ASTs
+            // encode to pcm16 since that's the only format ffmpeg can handle well for ASTs
             ast.format = EncodeFormat.PCM16;
             var pcmAstPath = filePath.Replace(".ast", ".tmp.pcm16.ast");
             OutAst(ast, pcmAstPath);
@@ -121,6 +122,8 @@ namespace GalaxEyes.Inspectors
             ast.format = oldFormat;
             ast.LoopStart = newLoopStart;
             ast.LoopEnd = newLoopEnd;
+            ast.Loop = hasLoop;
+
             File.Delete(resampledAstPath);
             OutAst(ast, filePath);
             
