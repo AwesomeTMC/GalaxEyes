@@ -1,25 +1,19 @@
-﻿using Avalonia.Controls.Shapes;
-using Avalonia.Media.Imaging;
+﻿using Avalonia.Media.Imaging;
 using Binary_Stream;
 using GalaxEyes.Inspectors;
 using Hack.io.Class;
-using Hack.io.Interface;
-using Hack.io.KCL;
 using Hack.io.RARC;
 using Hack.io.Utility;
-using Hack.io.YAZ0;
 using jkr_lib;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -281,7 +275,7 @@ public static class Util
     {
         try
         {
-            var data = Yaz0.Decompress(File.ReadAllBytes(arcPath));
+            var data = Binary_Stream.Yaz0.Decompress(File.ReadAllBytes(arcPath));
             if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.JKRLib)
                 return new JKRLibRARC(data);
             else if (MainSettings.Instance.ArchiveHandler == ArchiveHandler.HackIO)
@@ -306,8 +300,8 @@ public static class Util
         try
         {
             var data = arc.ToBytes();
-            var yaz0_data = YAZ0.Compress_Strong(data, null, strength);
-            WriteAllBytesSafe(arcPath, yaz0_data);
+            var yaz0_data = GalaxEyes.Yaz0.Compress(data, 0x1000, (ushort)strength);
+            WriteAllBytesSafe(arcPath, yaz0_data.ToArray());
             return true;
         }
         catch (Exception e)

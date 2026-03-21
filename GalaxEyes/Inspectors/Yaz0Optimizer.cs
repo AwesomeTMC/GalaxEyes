@@ -30,7 +30,7 @@ namespace GalaxEyes.Inspectors
             if (!YAZ0.Check(file))
             {
                 List<InspectorAction> actions = new() {
-                    new InspectorAction(() => { return Encode(filePath, null); }, "Compress file"),
+                    new InspectorAction(() => { return Compress(filePath, null); }, "Compress file"),
                     new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
                 resultList.Add(new Result(ResultType.Optimize, filePath, "Uncompressed file(s) detected.", InspectorName, actions));
@@ -39,10 +39,10 @@ namespace GalaxEyes.Inspectors
             return resultList;
         }
 
-        public List<Result> Encode(String filePath, uint? strength)
+        public List<Result> Compress(String filePath, uint? strength)
         {
             List<Result> results = new();
-            var thisFunc = () => { return Encode(filePath, strength); };
+            var thisFunc = () => { return Compress(filePath, strength); };
             strength = strength ?? Settings.Strength;
 
             var oldData = File.ReadAllBytes(filePath);
