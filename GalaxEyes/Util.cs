@@ -301,7 +301,7 @@ public static class Util
         {
             var data = arc.ToBytes();
             var yaz0_data = GalaxEyes.Yaz0.Compress(data, 0x1000, (ushort)strength);
-            WriteAllBytesSafe(arcPath, yaz0_data.ToArray());
+            WriteAllBytesSafe(arcPath, yaz0_data);
             return true;
         }
         catch (Exception e)
