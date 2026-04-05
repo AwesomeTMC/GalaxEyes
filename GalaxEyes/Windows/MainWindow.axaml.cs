@@ -138,12 +138,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
+
+        // add inspectors to the data model
         foreach (Inspector? inspector in AllInspectors.Items)
         {
             if (inspector == null)
                 continue;
             InspectorList.Items.Add(inspector);
         }
+
+        // switch to waiting state if the mod directory is now valid
         MainSettings.Instance.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainSettings.Instance.ModDirectory))

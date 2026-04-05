@@ -76,7 +76,7 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
-				<ScrollViewer Grid.Row="0">
+				<ScrollViewer Grid.Row="0" BringIntoViewOnFocusChange="False">
 					<ItemsControl ItemsSource="{Binding ResultList}"
 								   ItemTemplate="{StaticResource InspectorResultGroup}"/>
 				</ScrollViewer>
