@@ -51,10 +51,9 @@ namespace GalaxEyes.Inspectors
                 
                 List<InspectorAction> actions = new()
                 {
-                    new InspectorAction(() => { return RemoveDuplicates(filePath);  }, "Remove duplicates"),
-                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => { return RemoveDuplicates(filePath);  }, "Remove duplicates")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", InspectorName, actions, dupeCount.ToString()));
+                Util.AddOptimize(ref resultList, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", InspectorName, actions, dupeCount.ToString());
             }
 
             return resultList;

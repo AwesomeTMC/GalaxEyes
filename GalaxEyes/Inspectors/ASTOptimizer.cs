@@ -42,19 +42,17 @@ namespace GalaxEyes.Inspectors
             {
                 List<InspectorAction> actions = new()
                 {
-                    new InspectorAction(() => {return ADPCMEncodeAST(filePath); }, "ADPCM Encode AST"),
-                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => {return ADPCMEncodeAST(filePath); }, "ADPCM Encode AST")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "AST encoded in PCM16. Try encoding it in ADPCM.", InspectorName, actions));
+                Util.AddOptimize(ref resultList, filePath, "AST encoded in PCM16. Try encoding it in ADPCM.", InspectorName, actions);
             }
             if (sampleRate > 32000)
             {
                 List<InspectorAction> actions = new()
                 {
                     new InspectorAction(() => {return ResampleAST(filePath); }, "Resample to 32khz"),
-                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "AST sample rate > 32khz.", InspectorName, actions, sampleRate.ToString()));
+                Util.AddOptimize(ref resultList, filePath, "AST sample rate > 32khz.", InspectorName, actions, sampleRate.ToString());
             }
             return resultList;
         }

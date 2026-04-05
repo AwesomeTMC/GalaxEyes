@@ -22,10 +22,9 @@ namespace GalaxEyes.Inspectors
         {
             List<Result> resultList = new List<Result>();
             List<InspectorAction> actions = new() {
-                new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file"),
-                new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file")
             };
-            resultList.Add(new Result(ResultType.Optimize, filePath, "Temporary files detected.", InspectorName, actions));
+            Util.AddOptimize(ref resultList, filePath, "Temporary files detected.", InspectorName, actions);
 
             return resultList;
         }

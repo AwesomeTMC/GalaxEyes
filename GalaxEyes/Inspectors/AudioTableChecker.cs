@@ -55,7 +55,6 @@ namespace GalaxEyes.Inspectors
                 {
                     List<InspectorAction> actions = new()
                     {
-                        new InspectorAction(Util.NULL_ACTION, "Ignore this once"),
                         new InspectorAction(() => {
                             var newEntry = new BCSV.Entry();
                             newEntry.Add(STAGE_NAME, stageBgmStage);
@@ -63,7 +62,7 @@ namespace GalaxEyes.Inspectors
                             return AddEntry(filePath, "ScenarioBgmInfo.bcsv", newEntry); },
                             "Add stage to ScenarioBgmInfo")
                     };
-                    resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in StageBgmInfo, but not ScenarioBgmInfo. Your music might be muted.", InspectorName, actions, stageBgmStage));
+                    Util.AddWarn(ref resultList, filePath, "Stage(s) found in StageBgmInfo, but not ScenarioBgmInfo. Your music might be muted.", InspectorName, actions, stageBgmStage, 1);
                 }
                 scenarioBgmStages.Remove(stageBgmStage);
             }
@@ -75,15 +74,13 @@ namespace GalaxEyes.Inspectors
                             var newEntry = new BCSV.Entry();
                             newEntry.Add(STAGE_NAME, scenarioBgmStage);
 
-                            return AddEntry(filePath, "StageBgmInfo.bcsv", newEntry); }, "Add stage to StageBgmInfo"),
-                    new InspectorAction(Util.NULL_ACTION, "Ignore this once"),
+                            return AddEntry(filePath, "StageBgmInfo.bcsv", newEntry); }, "Add stage to StageBgmInfo")
                 };
-                resultList.Add(new Result(ResultType.Warn, filePath, "Stage(s) found in ScenarioBgmInfo, but not StageBgmInfo. This will cause a crash.", InspectorName, actions, scenarioBgmStage));
+                Util.AddWarn(ref resultList, filePath, "Stage(s) found in ScenarioBgmInfo, but not StageBgmInfo. This will cause a crash.", InspectorName, actions, scenarioBgmStage);
             }
             if (stageBgmStages.Count > 80)
             {
-                List<InspectorAction> actions = new() { new InspectorAction(Util.NULL_ACTION, "Ignore this once") };
-                resultList.Add(new Result(ResultType.Warn, filePath, "Maximum vanilla entry count exceeded (80) for StageBgmInfo.bcsv. This will cause a crash.", InspectorName, actions, "Entry count: " + stageBgmStages.Count));
+                Util.AddWarn(ref resultList, filePath, "Maximum vanilla entry count exceeded (80) for StageBgmInfo.bcsv. This will cause a crash.", InspectorName, null, "Entry count: " + stageBgmStages.Count);
             }
             return resultList;
         }

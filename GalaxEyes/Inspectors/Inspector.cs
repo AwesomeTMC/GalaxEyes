@@ -49,14 +49,15 @@ namespace GalaxEyes.Inspectors
         }
     }
 
-    public class Result(ResultType type, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? callbacks = null, string resultSpecificMessage = "")
+    public class Result(ResultType type, string externalFilePath, string groupMessage, string inspectorName, List<InspectorAction>? callbacks = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
     {
         public List<InspectorAction> Callbacks { get; set; } = callbacks ?? new();
         public ResultType Type { get; set; } = type;
         public string Message { get; set; } = resultSpecificMessage;
-        public string AffectedFile { get; set; } = affectedFile;
+        public string ExternalFilePath { get; set; } = externalFilePath;
         public string GroupMessage { get; set; } = groupMessage;
         public string InspectorName { get; set; } = inspectorName;
+        public int DefaultSelectedIndex { get; set; } = defaultSelectedIndex;
     }
     public abstract class Inspector(String name)
     {

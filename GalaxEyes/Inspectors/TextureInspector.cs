@@ -126,10 +126,9 @@ namespace GalaxEyes.Inspectors
                     List<InspectorAction> actions = new()
                     {
                         new InspectorAction(() => { return PreviewTextureReEncode(filePath, fnode.Path, bestFormat); }, "Re-encode texture (Preview)"),
-                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Path, bestFormat);  }, "Re-encode texture (No preview)"),
-                        new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                        new InspectorAction(() => { return ReEncodeTexture(filePath, fnode.Path, bestFormat);  }, "Re-encode texture (No preview)")
                     };
-                    resultList.Add(new Result(ResultType.Optimize, filePath, "Different image encoding recommended", InspectorName, actions, fnode.Name + "\nFormat " + format + " -> " + bestFormat));
+                    Util.AddOptimize(ref resultList, filePath, "Different image encoding recommended", InspectorName, actions, fnode.Name + "\nFormat " + format + " -> " + bestFormat);
                 }
             }
 

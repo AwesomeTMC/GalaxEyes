@@ -39,7 +39,7 @@ public partial class MainSettings : FileSettings<MainSettings>
     [ObservableProperty] private string _currentTheme = "System";
     [ObservableProperty] private ArchiveHandler _archiveHandler = ArchiveHandler.JKRLib;
     [ObservableProperty] private string _modDirectory = "";
-    [ObservableProperty] private Dictionary<string, bool> _optimizersEnabled = new Dictionary<string, bool>();
+    [ObservableProperty] private List<string> _ignoredHashes = new();
 }
 
 public interface IHaveInspectorSettings : IHaveSettings

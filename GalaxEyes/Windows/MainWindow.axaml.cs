@@ -18,10 +18,10 @@ using System.Threading.Tasks;
 
 namespace GalaxEyes;
 
-public class InspectorResultRow(string label, string filePath, string inspectorName, List<InspectorAction> actions, InspectorAction? selectedAction) : INotifyPropertyChanged
+public class InspectorResultRow(string label, string externalFilePath, string inspectorName, List<InspectorAction> actions, InspectorAction? selectedAction) : INotifyPropertyChanged
 {
     public string Label { get; set; } = label;
-    public string FilePath { get; set; } = filePath;
+    public string ExternalFilePath { get; set; } = externalFilePath;
 
     public List<InspectorAction> Actions { get; set; } = actions;
     private InspectorAction? _selectedAction = selectedAction;
@@ -66,9 +66,9 @@ public class InspectorResultRow(string label, string filePath, string inspectorN
 
     private string GetPathMessage(string modDirectory)
     {
-        if (FilePath == "*")
-            return "All files are affected.";
-        return Path.GetRelativePath(modDirectory, FilePath);
+        if (ExternalFilePath == "*")
+            return "All external files are affected.";
+        return "External: " + Path.GetRelativePath(modDirectory, ExternalFilePath);
     }
 }
 
@@ -280,7 +280,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
             foreach (Result result in tempResults)
             {
-                Util.AddResult(state.ResultList, result, result.Callbacks.FirstOrDefault());
+                Util.AddResultToGroups(state.ResultList, result, result.Callbacks[result.DefaultSelectedIndex]);
             }
 
             return state;
@@ -341,7 +341,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 if (result?.SelectedAction == null)
                     return;
 
-                var semaphore = FileLocks.GetOrAdd(result.FilePath, _ => new SemaphoreSlim(1, 1));
+                var semaphore = FileLocks.GetOrAdd(result.ExternalFilePath, _ => new SemaphoreSlim(1, 1));
 
                 await semaphore.WaitAsync(cancellationToken);
 
@@ -356,7 +356,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 catch (Exception e)
                 {
                     List<Result> exceptionResults = new List<Result>();
-                    Util.AddException(ref exceptionResults, e, result.FilePath, result.InspectorName, result.SelectedAction.Callback);
+                    Util.AddException(ref exceptionResults, e, result.ExternalFilePath, result.InspectorName, result.SelectedAction.Callback);
                     foreach (Result exceptionResult in exceptionResults)
                         tempResults.Add(exceptionResult);
                 }
@@ -393,7 +393,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         foreach (Result result in newResults)
         {
-            Util.AddResult(resultsState.ResultList, result, result.Callbacks.FirstOrDefault());
+            Util.AddResultToGroups(resultsState.ResultList, result, result.Callbacks[result.DefaultSelectedIndex]);
         }
 
         if (resultsState.ResultList.Count > 0)

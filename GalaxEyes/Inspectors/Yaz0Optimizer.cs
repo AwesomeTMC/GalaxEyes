@@ -30,10 +30,9 @@ namespace GalaxEyes.Inspectors
             if (!YAZ0.Check(file))
             {
                 List<InspectorAction> actions = new() {
-                    new InspectorAction(() => { return Compress(filePath, null); }, "Compress file"),
-                    new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                    new InspectorAction(() => { return Compress(filePath, null); }, "Compress file")
                 };
-                resultList.Add(new Result(ResultType.Optimize, filePath, "Uncompressed file(s) detected.", InspectorName, actions));
+                Util.AddOptimize(ref resultList, filePath, "Uncompressed file(s) detected.", InspectorName, actions);
             }
             file.Close();
             return resultList;

@@ -45,10 +45,9 @@ namespace GalaxEyes.Inspectors
                 if (hash1.SequenceEqual(hash2))
                 {
                     List<InspectorAction> actions = new() {
-                        new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file"),
-                        new InspectorAction(Util.NULL_ACTION, "Ignore this once")
+                        new InspectorAction(() => { return RemoveFile(filePath); }, "Remove file")
                     };
-                    resultList.Add(new Result(ResultType.Optimize, filePath, "Vanilla file(s) detected.", InspectorName, actions));
+                    Util.AddOptimize(ref resultList, filePath, "Vanilla file(s) detected.", InspectorName, actions);
                 }
             }
 

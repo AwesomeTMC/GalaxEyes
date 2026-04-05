@@ -196,9 +196,8 @@ public static class Util
         List<InspectorAction> standardActions = new();
         if (retryCallback != null)
             standardActions.Add(new InspectorAction(retryCallback, "Retry"));
-        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
-        results.Add(new Result(ResultType.Error, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage));
+        Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage);
     }
 
     public static void AddError(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, Func<List<Result>>? retryCallback, string resultSpecificMessage = "")
@@ -207,14 +206,31 @@ public static class Util
         List<InspectorAction> standardActions = new();
         if (retryCallback != null)
             standardActions.Add(new InspectorAction(retryCallback, "Retry"));
-        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
-        results.Add(new Result(ResultType.Error, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage));
+        Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions);
     }
 
-    public static void AddResult(ObservableCollection<InspectorResultGroup> groups, Result result, InspectorAction? selectedAction)
+    public static void AddOptimize(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
     {
-        var resultRow = new InspectorResultRow(result.Message, result.AffectedFile, result.InspectorName, result.Callbacks, selectedAction);
+        Util.AddResult(ResultType.Optimize, ref results, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex);
+    }
+
+    public static void AddWarn(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
+    {
+        Util.AddResult(ResultType.Warn, ref results, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex);
+    }
+
+    public static void AddResult(ResultType resultType, ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
+    {
+        if (actions == null)
+            actions = new();
+        actions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
+        results.Add(new Result(resultType, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex));
+    }
+
+    public static void AddResultToGroups(ObservableCollection<InspectorResultGroup> groups, Result result, InspectorAction? selectedAction)
+    {
+        var resultRow = new InspectorResultRow(result.Message, result.ExternalFilePath, result.InspectorName, result.Callbacks, selectedAction);
         foreach (InspectorResultGroup group in groups)
         {
             if (group.GroupMessage == result.GroupMessage)
