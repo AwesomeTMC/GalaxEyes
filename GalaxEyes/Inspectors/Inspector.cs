@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -92,6 +93,17 @@ namespace GalaxEyes.Inspectors
         /// <returns></returns>
         public virtual bool DoCheck(string filePath)
         {
+            string thisHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(filePath)));
+            foreach (var entry in MainSettings.Instance.IgnoreEntries)
+            {
+                // Entry is only applicable if it contains the current inspector
+                if (!entry.Inspectors.Contains(InspectorName))
+                    continue;
+                if ((string.IsNullOrEmpty(entry.Hash) || entry.Hash == thisHash) && (string.IsNullOrEmpty(entry.Path) || entry.Path == filePath))
+                {
+                    return false;
+                }
+            }
             return Settings.IsEnabled;
         }
         /// <summary>

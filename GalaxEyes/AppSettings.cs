@@ -1,12 +1,16 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -30,16 +34,53 @@ public enum ArchiveHandler
     JKRLib = 1
 }
 
+public partial class IgnoreEntry : ObservableObject
+{
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [ObservableProperty] private string? _hash;
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [ObservableProperty] private string? _path;
+    [ObservableProperty] private List<string> _inspectors = new();
+
+    protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        MainSettings.TrySave();
+    }
+}
+
+  
 public partial class MainSettings : FileSettings<MainSettings>
 {
     private static MainSettings? _instance;
     public static MainSettings Instance => _instance ??= Load();
-    [JsonIgnore] public override string FileName => "main_settings.json";
 
-    [ObservableProperty] private string _currentTheme = "System";
-    [ObservableProperty] private ArchiveHandler _archiveHandler = ArchiveHandler.JKRLib;
-    [ObservableProperty] private string _modDirectory = "";
-    [ObservableProperty] private List<string> _ignoredHashes = new();
+    public static void TrySave()
+    {
+        if (_instance != null && !_instance.Loading)
+        {
+            _instance.Save();
+        }
+    }
+    [JsonIgnore] public override string FileName => "main_settings.json";
+    public string CurrentTheme { get => GetField("System"); set => SetField(value); }
+    public ArchiveHandler ArchiveHandler { get => GetField(ArchiveHandler.JKRLib); set => SetField(value); }
+    public string ModDirectory { get => GetField(""); set => SetField(value); }
+
+    public ObservableCollection<IgnoreEntry> IgnoreEntries
+    {
+        get => GetField<ObservableCollection<IgnoreEntry>?>(null) ?? new();
+        set => SetField(value);
+    }
+
+    public void AddIgnoreEntry(IgnoreEntry entry)
+    {
+        lock (Lock)
+        {
+            IgnoreEntries.Add(entry);
+        }
+        Save();
+    }
 }
 
 public interface IHaveInspectorSettings : IHaveSettings
@@ -101,48 +142,97 @@ public partial class LiveSettingEntry : ObservableObject
 public abstract partial class InspectorSettings<T> : FileSettings<T>, IHaveInspectorSettings
     where T : InspectorSettings<T>, new()
 {
-    [ObservableProperty] private bool _isEnabled = true;
+    public bool IsEnabled { get => GetField(true); set => SetField(value); }
 
     public new List<LiveSettingEntry> GetEditableEntries()
     {
         return this.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.Name != nameof(IHaveSettings.FileName) && p.Name != nameof(IHaveInspectorSettings.IsEnabled))
+            .Where(p => p.Name != nameof(IHaveSettings.FileName) && p.Name != nameof(IHaveInspectorSettings.IsEnabled) && p.Name != nameof(Loading))
             .Select(p => new LiveSettingEntry(p, this))
             .ToList();
     }
 }
 
-public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings
+public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings, IJsonOnDeserializing, IJsonOnDeserialized
     where T : FileSettings<T>, new()
 {
+
+    private readonly ConcurrentDictionary<string, object?> _settings = new();
+
+    protected static readonly object Lock = new();
+
+    [JsonIgnore]
+    public bool Loading { get; private set; } = false;
+
+    public void OnDeserializing()
+    {
+        Loading = true;
+    }
+
+    public void OnDeserialized()
+    {
+        Loading = false;
+    }
+
+    protected TVal GetField<TVal>(TVal defaultValue, [CallerMemberName] string key = "")
+    {
+        if (_settings.TryGetValue(key, out var val) && val is TVal typedVal)
+            return typedVal;
+
+        return defaultValue;
+    }
+
+    protected void SetField<TVal>(TVal value, [CallerMemberName] string key = "")
+    {
+        bool valueExists = _settings.TryGetValue(key, out var oldVal) && oldVal != null;
+        
+        if (valueExists && !EqualityComparer<TVal>.Default.Equals((TVal)oldVal, value) || !valueExists)
+        {
+            _settings[key] = value;
+            OnPropertyChanged(key);
+            Save();
+        }
+    }
+
     public abstract string FileName { get; }
 
     protected virtual void InitializeNew() { }
 
     public void Save()
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        File.WriteAllText("Settings/" + FileName, JsonSerializer.Serialize(this, GetType(), options));
+        if (Loading) return;
+        lock (Lock)
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            File.WriteAllText("Settings/" + FileName, JsonSerializer.Serialize(this, GetType(), options));
+        }
+        
     }
 
     public static T Load()
     {
-        Directory.CreateDirectory("Settings");
-        string path = "Settings/" + new T().FileName;
-        if (!File.Exists(path))
+        lock (Lock)
         {
-            var newSettings = new T();
-            newSettings.InitializeNew();
-            return newSettings;
-        }
-        
+            Directory.CreateDirectory("Settings");
+            string path = "Settings/" + new T().FileName;
+            if (!File.Exists(path))
+            {
+                var newSettings = new T();
+                newSettings.InitializeNew();
+                return newSettings;
+            }
 
-        try
-        {
-            return JsonSerializer.Deserialize<T>(File.ReadAllText(path)) ?? new T();
+
+            try
+            {
+                return JsonSerializer.Deserialize<T>(File.ReadAllText(path)) ?? new T();
+            }
+            catch (Exception e) { 
+                Debug.WriteLine($"Error while loading settings!!! {e.Message}"); 
+                return new T(); 
+            }
         }
-        catch { return new T(); }
     }
 
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
@@ -154,7 +244,7 @@ public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings
     {
         return this.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.Name != nameof(IHaveSettings.FileName))
+            .Where(p => p.Name != nameof(IHaveSettings.FileName) && p.Name != nameof(Loading))
             .Select(p => new LiveSettingEntry(p, this))
             .ToList();
     }

@@ -19,9 +19,10 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "kcl_settings.json";
 
-        [ObservableProperty] [property: Name("Minimum duplicates to show on scan")] private uint _minimumDuplicates = 16;
-        [ObservableProperty] private uint _maxTrianglesPerCube = 25;
-        [ObservableProperty] private uint _minCubeSize = 8;
+        [property: Name("Minimum duplicates to show on scan")]
+        public uint MinimumDuplicates { get => GetField(16u); set => SetField(value); }
+        public uint MaxTrianglesPerCube { get => GetField(25u); set => SetField(value); }
+        public uint MinCubeSize { get => GetField(8u); set => SetField(value); }
     }
     public class KCLOptimizer : Inspector
     {

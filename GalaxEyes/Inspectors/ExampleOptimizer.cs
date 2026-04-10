@@ -11,9 +11,13 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
-        [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
-        [ObservableProperty] [property: Name("Cause independent error intentionally?")] private bool _causeIndependentError = false;
-        [ObservableProperty] private int _sleepAmount = 0;
+        [property: Name("Cause error intentionally?")]
+        public bool CauseError { get => GetField(false); set => SetField(value); }
+
+        [property: Name("Cause independent error intentionally?")]
+        public bool CauseIndependentError { get => GetField(false); set => SetField(value); }
+
+        public int SleepAmount { get => GetField(0); set => SetField(value); }
 
         // You can add this to make your Inspector disabled by default.
         protected override void InitializeNew()

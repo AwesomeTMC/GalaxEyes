@@ -57,16 +57,16 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "bti_settings.json";
 
-        [ObservableProperty] private bool _lossySuggestions = true;
-        [ObservableProperty] 
-        [property: Name("Minimum width to recommend lossy CMPR\n" +
-            "(lossy suggestions must be enabled)")] 
-        private uint _minCMPRWidth = 128;
+        public bool LossySuggestions { get => GetField(true); set => SetField(value); }
 
-        [ObservableProperty]
+        [property: Name("Minimum width to recommend lossy CMPR\n" +
+                        "(lossy suggestions must be enabled)")]
+        public uint MinCMPRWidth { get => GetField(128u); set => SetField(value);  }
+
         [property: Name("Minimum height to recommend lossy CMPR\n" +
-            "(lossy suggestions must be enabled)")]
-        private uint _minCMPRHeight = 128;
+                        "(lossy suggestions must be enabled)")]
+        public uint MinCMPRHeight { get => GetField(128u); set => SetField(value); }
+
     }
     public class TextureInspector : Inspector
     {

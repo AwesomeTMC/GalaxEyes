@@ -3,6 +3,7 @@ using Hack.io.YAZ0;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using System.Threading;
 
@@ -12,7 +13,7 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "yaz0_settings.json";
 
-        [ObservableProperty] private uint _strength = 0x1000;
+        public uint Strength { get => GetField(0x1000u); set => SetField(value); }
     }
     public class Yaz0Optimizer : Inspector
     {
@@ -44,7 +45,7 @@ namespace GalaxEyes.Inspectors
             var thisFunc = () => { return Compress(filePath, strength); };
             strength = strength ?? Settings.Strength;
 
-            var oldData = File.ReadAllBytes(filePath);
+            var oldData = new MemoryStream(File.ReadAllBytes(filePath));
             var oldSize = oldData.Length;
             
             var file = Util.TryLoadArchive(ref results, filePath, InspectorName, thisFunc);
@@ -58,11 +59,11 @@ namespace GalaxEyes.Inspectors
 
             if (oldSize < newSize)
             {
-                List<InspectorAction> actions = new() {
-                    new InspectorAction(() => { return Write(filePath, oldData); }, "Stay with old file"),
-                    new InspectorAction(Util.NULL_ACTION, "Stay with new file")
-                };
-                results.Add(new Result(ResultType.Warn, filePath, "Old archive size is smaller than new size.", InspectorName, actions));
+                var hash = Convert.ToHexString(SHA256.HashData(oldData));
+                var entry = new IgnoreEntry() { Hash = hash };
+                entry.Inspectors.Add(InspectorName);
+                Util.AddIgnoreEntry(entry);
+                Write(filePath, oldData.ToArray());
             }
             return results;
         }

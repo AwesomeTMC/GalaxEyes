@@ -1,4 +1,5 @@
 ﻿using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Binary_Stream;
 using GalaxEyes.Inspectors;
 using Hack.io.Class;
@@ -14,6 +15,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -225,6 +228,17 @@ public static class Util
         if (actions == null)
             actions = new();
         actions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
+        actions.Add(new InspectorAction(() =>
+        {
+            Util.AddIgnoreEntry(new IgnoreEntry { Hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(affectedFile))), Inspectors = new List<string> { inspectorName } });
+            return new();
+        }, "Ignore external file (by hash)\nfor this inspector"));
+
+        actions.Add(new InspectorAction(() =>
+        {
+            Util.AddIgnoreEntry(new IgnoreEntry { Path = affectedFile, Inspectors = new List<string> { inspectorName } });
+            return new();
+        }, "Ignore external file (by path)\nfor this inspector"));
         results.Add(new Result(resultType, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex));
     }
 
@@ -388,5 +402,10 @@ public static class Util
         image.Save(ms, new PngEncoder());
         ms.Position = 0;
         return new Bitmap(ms);
+    }
+
+    public static void AddIgnoreEntry(IgnoreEntry newEntry)
+    {
+        MainSettings.Instance.AddIgnoreEntry(newEntry);
     }
 }

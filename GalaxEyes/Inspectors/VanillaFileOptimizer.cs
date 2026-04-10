@@ -14,7 +14,8 @@ namespace GalaxEyes.Inspectors
     public partial class VanillaFileSettings : InspectorSettings<VanillaFileSettings>
     {
         [JsonIgnore] public override string FileName => "vanilla_optimizer_settings.json";
-        [ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
+        [property: Folder("Please select a vanilla directory. It should not have any modified files.")]
+        public string VanillaDirectory { get => GetField(""); set => SetField(value); }
     }
     public class VanillaFileOptimizer : Inspector
     {
