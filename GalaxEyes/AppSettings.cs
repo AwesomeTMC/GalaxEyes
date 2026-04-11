@@ -69,7 +69,16 @@ public partial class MainSettings : FileSettings<MainSettings>
 
     public ObservableCollection<IgnoreEntry> IgnoreEntries
     {
-        get => GetField<ObservableCollection<IgnoreEntry>?>(null) ?? new();
+        get
+        {
+            var val = GetField<ObservableCollection<IgnoreEntry>?>(null);
+            if (val == null)
+            {
+                val = new ObservableCollection<IgnoreEntry>();
+                SetField(val);
+            }
+            return val;
+        }
         set => SetField(value);
     }
 
@@ -186,7 +195,7 @@ public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings,
     protected void SetField<TVal>(TVal value, [CallerMemberName] string key = "")
     {
         bool valueExists = _settings.TryGetValue(key, out var oldVal) && oldVal != null;
-        
+
         if (valueExists && !EqualityComparer<TVal>.Default.Equals((TVal)oldVal, value) || !valueExists)
         {
             _settings[key] = value;
@@ -197,6 +206,12 @@ public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings,
 
     public abstract string FileName { get; }
 
+    public string GetFilePath() { 
+        string baseDir = System.IO.Path.Combine(AppContext.BaseDirectory, "Settings");
+        Directory.CreateDirectory(baseDir);
+        return System.IO.Path.Combine(baseDir, FileName);
+    }
+
     protected virtual void InitializeNew() { }
 
     public void Save()
@@ -205,7 +220,7 @@ public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings,
         lock (Lock)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText("Settings/" + FileName, JsonSerializer.Serialize(this, GetType(), options));
+            File.WriteAllText(GetFilePath(), JsonSerializer.Serialize(this, GetType(), options));
         }
         
     }
@@ -214,24 +229,25 @@ public abstract partial class FileSettings<T> : ObservableObject, IHaveSettings,
     {
         lock (Lock)
         {
-            Directory.CreateDirectory("Settings");
-            string path = "Settings/" + new T().FileName;
-            if (!File.Exists(path))
+            T newSettings = new T();
+            string path = newSettings.GetFilePath();
+            if (File.Exists(path))
             {
-                var newSettings = new T();
-                newSettings.InitializeNew();
-                return newSettings;
+                try
+                {
+                    T? serializedSettings = JsonSerializer.Deserialize<T>(File.ReadAllText(path));
+                    if (serializedSettings != null)
+                        return serializedSettings;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine($"Error while loading settings!!! {e.Message}");
+                }
             }
 
+            newSettings.InitializeNew();
+            return newSettings;
 
-            try
-            {
-                return JsonSerializer.Deserialize<T>(File.ReadAllText(path)) ?? new T();
-            }
-            catch (Exception e) { 
-                Debug.WriteLine($"Error while loading settings!!! {e.Message}"); 
-                return new T(); 
-            }
         }
     }
 

@@ -197,8 +197,9 @@ public static class Util
     {
 
         List<InspectorAction> standardActions = new();
-        if (retryCallback != null)
+        if (retryCallback != null && retryCallback != NULL_ACTION)
             standardActions.Add(new InspectorAction(retryCallback, "Retry"));
+        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
         Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage);
     }
@@ -209,24 +210,38 @@ public static class Util
         List<InspectorAction> standardActions = new();
         if (retryCallback != null)
             standardActions.Add(new InspectorAction(retryCallback, "Retry"));
+        standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
         Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions);
     }
 
     public static void AddOptimize(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
     {
+        if (actions == null)
+            actions = new();
+        AddIgnoreActions(ref actions, affectedFile, inspectorName);
         Util.AddResult(ResultType.Optimize, ref results, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex);
     }
 
     public static void AddWarn(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
     {
+        if (actions == null)
+            actions = new();
+        AddIgnoreActions(ref actions, affectedFile, inspectorName);
         Util.AddResult(ResultType.Warn, ref results, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex);
     }
 
     public static void AddResult(ResultType resultType, ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
     {
         if (actions == null)
-            actions = new();
+        {
+            actions = new List<InspectorAction> { new InspectorAction(NULL_ACTION, "Ignore this once") };
+        }
+        results.Add(new Result(resultType, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex));
+    }
+
+    public static void AddIgnoreActions(ref List<InspectorAction> actions, string affectedFile, string inspectorName)
+    {
         actions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
         actions.Add(new InspectorAction(() =>
         {
@@ -239,7 +254,6 @@ public static class Util
             Util.AddIgnoreEntry(new IgnoreEntry { Path = affectedFile, Inspectors = new List<string> { inspectorName } });
             return new();
         }, "Ignore external file (by path)\nfor this inspector"));
-        results.Add(new Result(resultType, affectedFile, groupMessage, inspectorName, actions, resultSpecificMessage, defaultSelectedIndex));
     }
 
     public static void AddResultToGroups(ObservableCollection<InspectorResultGroup> groups, Result result, InspectorAction? selectedAction)

@@ -9,6 +9,14 @@ It features:
 - Resampling and re-encoding your ASTs to be more efficient
 - ...and more!
 
+# Credits
+
+Coded by AwesomeTMC.
+
+Thanks to Bavario and Xandog for testing!
+
+See the section below for used libraries.
+
 # Libraries
 
 [JATAst by Xayrga](https://github.com/XAYRGA/jatast).
