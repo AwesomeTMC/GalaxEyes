@@ -422,4 +422,9 @@ public static class Util
     {
         MainSettings.Instance.AddIgnoreEntry(newEntry);
     }
+
+    public static T GetInspector<T>() where T : Inspector
+    {
+        return (T)AllInspectors.Items.First(i => i is T);
+    }
 }

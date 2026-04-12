@@ -128,6 +128,9 @@ public sealed class SelectDirectoryState : RightPaneState
 {
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
+    public required Func<string> GetSetting;
+    public required Action<string> SetSetting;
+    public string Setting { get => GetSetting(); set => SetSetting(value); }
 }
 
 public sealed class DoneState : RightPaneState { }
@@ -156,7 +159,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     RightPaneContent = new WaitingState();
             }
         };
-
+        VanillaFileOptimizer optimizer = Util.GetInspector<VanillaFileOptimizer>();
+        optimizer.Settings.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(optimizer.Settings.VanillaDirectory) || e.PropertyName == nameof(optimizer.Settings.IsEnabled))
+            {
+                if (CheckDirectoryState())
+                    RightPaneContent = new WaitingState();
+            }
+        };
         if (CheckDirectoryState())
             RightPaneContent = new WaitingState();
     }
@@ -199,13 +210,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var stagePath = Path.Combine(MainSettings.Instance.ModDirectory, "StageData");
         var objectPath = Path.Combine(MainSettings.Instance.ModDirectory, "ObjectData");
         bool isValidState = false;
+        VanillaFileOptimizer optimizer = Util.GetInspector<VanillaFileOptimizer>();
         if (MainSettings.Instance.ModDirectory == "")
         {
             RightPaneContent = new SelectDirectoryState
             {
                 Title = "Please select a directory",
                 Description = "You must select a mod directory to scan.\n" +
-                "It needs to have the folders \"StageData\" and \"ObjectData\" inside."
+                "It needs to have the folders \"StageData\" and \"ObjectData\" inside.",
+                SetSetting = (value) => MainSettings.Instance.ModDirectory = value,
+                GetSetting = () => MainSettings.Instance.ModDirectory
             };
         }
         else if (!Path.Exists(MainSettings.Instance.ModDirectory))
@@ -214,7 +228,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             {
                 Title = "Invalid Directory",
                 Description = "Your selected mod directory doesn't exist.\n" +
-                "Please select a mod directory the folders \"StageData\" and \"ObjectData\" inside."
+                "Please select a mod directory the folders \"StageData\" and \"ObjectData\" inside.",
+                SetSetting = (value) => MainSettings.Instance.ModDirectory = value,
+                GetSetting = () => MainSettings.Instance.ModDirectory
             };
         }
         else if (!Path.Exists(stagePath) || !Path.Exists(objectPath))
@@ -223,7 +239,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             {
                 Title = "Invalid Directory",
                 Description = "Your selected mod directory doesn't appear to be a mod directory.\n" +
-                "It needs to have the folders \"StageData\" and \"ObjectData\" inside."
+                "It needs to have the folders \"StageData\" and \"ObjectData\" inside.",
+                SetSetting = (value) => MainSettings.Instance.ModDirectory = value,
+                GetSetting = () => MainSettings.Instance.ModDirectory
+            };
+        }
+        else if (optimizer.Settings.IsEnabled && !Util.IsValidVanillaDirectory(optimizer.Settings.VanillaDirectory))
+        {
+            RightPaneContent = new SelectDirectoryState
+            {
+                Title = "Invalid Vanilla Directory",
+                Description = "You haven't set a valid vanilla directory.\n" +
+                "It needs to have the folders \"StageData\" and \"ObjectData\" inside,\n" +
+                "and should be an unchanged extracted copy of the game.\n" +
+                "Alternatively, disable the Vanilla File Optimizer.",
+                SetSetting = (value) => optimizer.Settings.VanillaDirectory = value,
+                GetSetting = () => optimizer.Settings.VanillaDirectory
             };
         }
         else
@@ -430,7 +461,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (result != null && result.Count > 0)
         {
             var storageFolder = result[0];
-            MainSettings.Instance.ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
+            if (RightPaneContent is SelectDirectoryState selectDirectoryState)
+            {
+                selectDirectoryState.Setting = storageFolder.Path.AbsolutePath.Replace("%20", " ");
+            }
         }
     }
 

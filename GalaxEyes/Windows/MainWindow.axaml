@@ -119,7 +119,7 @@
 							Margin="0 0 10 0"/>
 
 					<TextBox Grid.Column="1"
-							 Watermark="The path to your mod" Text="{Binding #Root.DataContext.Settings.ModDirectory}"/>
+							 Watermark="The path to the directory" Text="{Binding Setting}"/>
 				</Grid>
 			</StackPanel>
 		</DataTemplate>
