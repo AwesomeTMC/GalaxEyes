@@ -1,5 +1,7 @@
 # Overview
-This guide is for people wanting to contribute a custom inspector to GalaxEyes. It shouldn't be too difficult but there's a lot of details to keep in mind. Generally, I recommend looking at existing inspectors and especially `ExampleOptimizer`.
+This is for people wanting to contribute a custom inspector to GalaxEyes. There's a lot of details to keep in mind. Generally, I recommend looking at existing inspectors and especially `ExampleOptimizer`.
+
+**If you are familiar with programming and SMG modding** I can help you with any questions and concerns. I will not tolerate vibe coded slop.
 # Settings
 Each inspector can have their own settings. They are defined at the top of your optimizers .cs file:
 
@@ -10,10 +12,13 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
-        [ObservableProperty] [property: Name("Cause error intentionally?")] private bool _causeError = false;
-        [ObservableProperty] [property: Name("Cause independent error intentionally?")] 
-        private bool _causeIndependentError = false;
-        [ObservableProperty] private int _sleepAmount = 0;
+        [Name("Cause error intentionally?")]
+        public bool CauseError { get => GetField(false); set => SetField(value); }
+
+        [Name("Cause independent error intentionally?")]
+        public bool CauseIndependentError { get => GetField(false); set => SetField(value); }
+
+        public int SleepAmount { get => GetField(0); set => SetField(value); }
 
         // You can add this to make your Inspector disabled by default.
         protected override void InitializeNew()
@@ -38,13 +43,14 @@ public override ExampleSettings Settings { get; } = ExampleSettings.Load();
 ## Attributes
 If you want custom UI for a particular setting, you'll have to use an attribute.
 The attributes that already exist are:
-### `[property: Folder("What to say on the open folder dialog")]`
+### `[Folder("What to say on the open folder dialog")]`
 Adds an "Open Folder" button that lets the user select a directory.
 You can use it like this:
 ```c#
-[ObservableProperty] [property: Folder("Please select a vanilla directory. It should not have any modified files.")] private string _vanillaDirectory = "";
+[Folder("Please select a vanilla directory. It should not have any modified files.")]
+public string VanillaDirectory { get => GetField(""); set => SetField(value); }
 ```
-### `[property: Name("Custom name for the setting")]`
+### `[Name("Custom name for the setting")]`
 Overrides the automatically generated display name for the setting.
 ## Custom Attributes
 If none of those are what you want, you can make your own. This is a little trickier.
@@ -94,8 +100,8 @@ Add the `public override List<Result> Check(String filePath)` method to your ins
 
 
 Important details:
-- This function should not modify any files.
-- It needs to return a `List<Result>`.
+- This function **should not** modify any files.
+- It needs to return a `List<Result>`, or a `Task<List<Result>>`.
 - Follow the style of existing optimizers.
 
 You can also have the `SettingsCheck` method. As the name suggests, it is for checking if the settings have any problems. 
@@ -120,3 +126,22 @@ public override List<Result> SettingsCheck()
 Resolving does the actual actions. This should modify files.
 
 Keep in mind that the file could've changed in between `Check` and your action's function.
+
+# Parallel
+
+GalaxEyes takes advantage of threads to process checking/resolving in parallel, making it faster for the user, but adding some complexity. I will be looking over any code you pull request to see if it has potential parallel problems, so don't worry if you're unsure.
+
+Here's some guidelines for resolving and checking:
+
+## Resolving
+The file you are currently *resolving* will be automatically locked, meaning only *your function* being called is accessing the file at that specifc time. Any other files are free game. Currently, there is no way to lock other files. If needed, [I will add it eventually](https://github.com/AwesomeTMC/GalaxEyes/issues/5).
+
+Keep in mind:
+- The only global variables you should modify are settings, or semaphores
+- Any member variables you add could cause race conditions
+
+## Checking
+Only different files will be checked at the same time on the same inspector. There is no "locking", as it is unnecessary for the existing inspectors. Again, if needed, [I will add it eventually](https://github.com/AwesomeTMC/GalaxEyes/issues/5).
+
+Note:
+- The file itself may change slightly, so don't store the entire contents of the file and pass it to the resolve function

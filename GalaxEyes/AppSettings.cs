@@ -36,9 +36,9 @@ public enum ArchiveHandler
 
 public partial class IgnoreEntry : ObservableObject
 {
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [ObservableProperty] private string? _hash;
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [ObservableProperty] private string? _path;
     [ObservableProperty] private List<string> _inspectors = new();
 

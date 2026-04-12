@@ -59,11 +59,11 @@ namespace GalaxEyes.Inspectors
 
         public bool LossySuggestions { get => GetField(true); set => SetField(value); }
 
-        [property: Name("Minimum width to recommend lossy CMPR\n" +
+        [Name("Minimum width to recommend lossy CMPR\n" +
                         "(lossy suggestions must be enabled)")]
         public uint MinCMPRWidth { get => GetField(128u); set => SetField(value);  }
 
-        [property: Name("Minimum height to recommend lossy CMPR\n" +
+        [Name("Minimum height to recommend lossy CMPR\n" +
                         "(lossy suggestions must be enabled)")]
         public uint MinCMPRHeight { get => GetField(128u); set => SetField(value); }
 

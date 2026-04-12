@@ -1,8 +1,6 @@
 ![GalaxEyes banner](banner.png)
 **GalaxEyes** is a tool for Super Mario Galaxy 2 that optimizes and checks for issues in your mod. 
 
-It's currently work in progress, so there may be bugs and things that will be changed. I will not be accepting pull requests currently.
-
 It features:
 - Removing vanilla files from your mod
 - Merging identical collision codes
@@ -52,3 +50,5 @@ Replace `Windows-x64` with `Linux-x64` or `osx-x64`, depending on your operating
 The resulting executable should be in `/GalaxEyes/bin/Release/net8.0/win-x64/publish/` (replace `win-x64` with `linux-x64` or `osx-x64`)
 
 If you wish to contribute, just open the included `GalaxEyes.slnx` with Visual Studio and click the play button at the top (it should say "GalaxEyes").
+
+Check [INSPECTORS.md](/INSPECTORS.md) for some helpful information about creating custom inspectors.

@@ -11,10 +11,10 @@ namespace GalaxEyes.Inspectors
     {
         [JsonIgnore] public override string FileName => "example_settings.json";
 
-        [property: Name("Cause error intentionally?")]
+        [Name("Cause error intentionally?")]
         public bool CauseError { get => GetField(false); set => SetField(value); }
 
-        [property: Name("Cause independent error intentionally?")]
+        [Name("Cause independent error intentionally?")]
         public bool CauseIndependentError { get => GetField(false); set => SetField(value); }
 
         public int SleepAmount { get => GetField(0); set => SetField(value); }
