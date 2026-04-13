@@ -7,6 +7,8 @@ It features:
 - Resampling and re-encoding your ASTs to be more efficient
 - ...and more!
 
+![GalaxEyes preview](preview.png)
+
 # Credits
 
 Coded by AwesomeTMC.
