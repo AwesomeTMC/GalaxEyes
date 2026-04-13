@@ -378,11 +378,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
                 try
                 {
-                    var curResults = await result.SelectedAction.Callback();
-                    foreach (Result tempResult in curResults)
+                    if (File.Exists(result.ExternalFilePath))
                     {
-                        tempResults.Add(tempResult);
+                        var curResults = await result.SelectedAction.Callback();
+                        foreach (Result tempResult in curResults)
+                        {
+                            tempResults.Add(tempResult);
+                        }
                     }
+                    
                 }
                 catch (Exception e)
                 {

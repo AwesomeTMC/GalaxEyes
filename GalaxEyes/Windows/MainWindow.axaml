@@ -8,7 +8,7 @@
 		xmlns:local="clr-namespace:GalaxEyes"
 		x:DataType="local:MainWindow"
 		x:Name="Root"
-		Title="GalaxEyes">
+		Title="GalaxEyes v1.0">
 	<Window.Resources>
 		<DataTemplate DataType="local:InspectorResultGroup" x:DataType="local:InspectorResultGroup" x:Key="InspectorResultGroup">
 			<Grid Margin="4" ColumnDefinitions="*">
