@@ -450,10 +450,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    private async void OpenModDirectoryDialog(object? sender, RoutedEventArgs e)
+    private async void OpenDirectoryDialog(object? sender, RoutedEventArgs e)
     {
         var options = new Avalonia.Platform.Storage.FolderPickerOpenOptions();
-        options.Title = "Select your mod directory. It usually contains 'StageData'.";
+        options.Title = "Select your directory.";
         options.AllowMultiple = false;
         options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(MainSettings.Instance.ModDirectory);
         var result = await this.StorageProvider.OpenFolderPickerAsync(options);
@@ -465,6 +465,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             {
                 selectDirectoryState.Setting = storageFolder.Path.AbsolutePath.Replace("%20", " ");
             }
+        }
+    }
+
+    private async void OpenModDirectoryDialog(object? sender, RoutedEventArgs e)
+    {
+        var options = new Avalonia.Platform.Storage.FolderPickerOpenOptions();
+        options.Title = "Select your mod directory. It usually contains 'StageData'.";
+        options.AllowMultiple = false;
+        options.SuggestedStartLocation = await this.StorageProvider.TryGetFolderFromPathAsync(MainSettings.Instance.ModDirectory);
+        var result = await this.StorageProvider.OpenFolderPickerAsync(options);
+
+        if (result != null && result.Count > 0)
+        {
+            var storageFolder = result[0];
+            MainSettings.Instance.ModDirectory = storageFolder.Path.AbsolutePath.Replace("%20", " ");
         }
     }
 

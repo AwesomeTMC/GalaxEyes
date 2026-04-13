@@ -114,7 +114,7 @@
 						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
 
-					<Button Grid.Column="0" Click="OpenModDirectoryDialog"
+					<Button Grid.Column="0" Click="OpenDirectoryDialog"
 							Content="Open Folder"
 							Margin="0 0 10 0"/>
 
