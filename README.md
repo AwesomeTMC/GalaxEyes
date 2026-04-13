@@ -9,6 +9,12 @@ It features:
 
 ![GalaxEyes preview](preview.png)
 
+# Installation
+
+Simply download the latest *stable* release from the releases tab, unzip the archive, and open GalaxEyes.exe.
+
+For the AST optimizer to resolve all issues, you must install ffmpeg and put it on your PATH or next to the GalaxEyes executable (hoping to change this in the future).
+
 # Credits
 
 Coded by AwesomeTMC.
