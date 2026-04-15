@@ -15,8 +15,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -151,6 +153,11 @@ public class JKRLibRARC : JKRArchive, IArchive
 {
     public JKRLibRARC(ReadOnlySpan<byte> span) : base(span)
     {
+        if (span.Length < 4)
+            throw new InvalidDataException("File is too small to be a RARC!");
+        var magic = Encoding.ASCII.GetString(span.Slice(0, 4));
+        if (magic != "RARC" && magic != "CRAR")
+            throw new InvalidDataException("File is not a RARC! Expected CRAR or RARC, got " + magic);
     }
 
     Endian IArchive.Endian { get => Endian; set => Endian = value; }
@@ -212,7 +219,7 @@ public static class Util
             standardActions.Add(new InspectorAction(retryCallback, "Retry"));
         standardActions.Add(new InspectorAction(NULL_ACTION, "Ignore this once"));
 
-        Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions);
+        Util.AddResult(ResultType.Error, ref results, affectedFile, groupMessage, inspectorName, standardActions, resultSpecificMessage);
     }
 
     public static void AddOptimize(ref List<Result> results, string affectedFile, string groupMessage, string inspectorName, List<InspectorAction>? actions = null, string resultSpecificMessage = "", int defaultSelectedIndex = 0)
@@ -426,5 +433,22 @@ public static class Util
     public static T GetInspector<T>() where T : Inspector
     {
         return (T)AllInspectors.Items.First(i => i is T);
+    }
+
+    public static bool IsRarc(string path) 
+    {
+        if (!path.EndsWith(".arc"))
+            return false;
+        try
+        {
+            var data = Binary_Stream.Yaz0.Decompress(File.ReadAllBytes(path));
+            BinaryStream stream = new BinaryStream(data);
+            string magic = stream.ReadString(4);
+            return magic == "RARC" || magic == "CRAR";
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -255,10 +255,11 @@ namespace GalaxEyes.Inspectors
         {
             if (!base.DoCheck(filePath))
                 return false;
-            if (!filePath.EndsWith(".arc"))
-                return false;
+            
             string relativePath = Path.GetRelativePath(MainSettings.Instance.ModDirectory, filePath).Replace("\\", "/");
             if (!relativePath.StartsWith("ObjectData") && !relativePath.StartsWith("LocalizeData") && !relativePath.StartsWith("LayoutData"))
+                return false;
+            if (!Util.IsRarc(filePath))
                 return false;
             return true;
         }

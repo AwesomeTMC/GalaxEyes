@@ -54,7 +54,7 @@ namespace GalaxEyes.Inspectors
                 {
                     new InspectorAction(() => { return RemoveDuplicates(filePath);  }, "Remove duplicates")
                 };
-                Util.AddOptimize(ref resultList, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", InspectorName, actions, dupeCount.ToString());
+                Util.AddOptimize(ref resultList, filePath, "File contains at least " + Settings.MinimumDuplicates + " duplicate materials", InspectorName, actions, dupeCount.ToString() + " duplicate materials");
             }
 
             return resultList;
@@ -64,9 +64,9 @@ namespace GalaxEyes.Inspectors
         {
             if (!base.DoCheck(filePath))
                 return false;
-            if (!filePath.EndsWith(".arc"))
-                return false;
             if (Directory.GetParent(filePath)?.Name != "ObjectData") 
+                return false;
+            if (!Util.IsRarc(filePath))
                 return false;
             return true;
         }

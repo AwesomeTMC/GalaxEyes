@@ -52,7 +52,7 @@ namespace GalaxEyes.Inspectors
                 {
                     new InspectorAction(() => {return ResampleAST(filePath); }, "Resample to 32khz"),
                 };
-                Util.AddOptimize(ref resultList, filePath, "AST sample rate > 32khz.", InspectorName, actions, sampleRate.ToString());
+                Util.AddOptimize(ref resultList, filePath, "AST sample rate > 32khz.", InspectorName, actions, "Sample rate: " + sampleRate.ToString() + "hz");
             }
             return resultList;
         }
